@@ -23,11 +23,11 @@ jobs:
         run: npm ci
 
       - name: Render video
-        run: npx remotion render BoxesMediaLogo out/boxes-logo.mp4
+        run: npx remotion render HolographicParticles out/holographic-particles.mp4
 
       - name: Upload rendered video
         uses: actions/upload-artifact@v4
         with:
-          name: boxes-logo-video
-          path: out/boxes-logo.mp4
+          name: holographic-particles-video
+          path: out/holographic-particles.mp4
           retention-days: 30
