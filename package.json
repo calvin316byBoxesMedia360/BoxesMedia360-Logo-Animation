@@ -6,11 +6,14 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@google-cloud/aiplatform": "^6.2.0",
+    "@remotion/bundler": "^4.0.414",
     "@remotion/cli": "4.0.414",
+    "@remotion/tailwind-v4": "4.0.414",
+    "dotenv": "^17.2.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.414",
-    "@remotion/tailwind-v4": "4.0.414",
     "tailwindcss": "4.0.0"
   },
   "devDependencies": {
@@ -24,6 +27,7 @@
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
+    "render": "node render.js",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc"
   },
