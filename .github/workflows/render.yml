@@ -50,7 +50,8 @@ jobs:
 
       - name: Render video
         run: |
-          npx remotion render src/index.ts PremiumMenuDynamic out/${{ github.event.inputs.filename }} --props '${{ github.event.inputs.menu_props }}'
+          mkdir -p out
+          npx remotion render src/index.ts PremiumMenuDynamic "out/${{ github.event.inputs.filename }}" --props '${{ github.event.inputs.menu_props }}'
 
       - name: Upload to Firebase Storage
         if: success()
@@ -61,7 +62,7 @@ jobs:
           if [ -n "$FIREBASE_SERVICE_ACCOUNT" ]; then
             echo "📤 Subiendo a Firebase Storage..."
             # Aquí iría un script de node para subir el archivo usando el service account
-            node scripts/upload-to-storage-action.js out/${{ github.event.inputs.filename }}
+            node scripts/upload-to-storage-action.js "out/${{ github.event.inputs.filename }}"
           else
             echo "⚠️ Secreto FIREBASE_SERVICE_ACCOUNT no configurado. Solo se guardará como artifact de GitHub."
           fi
@@ -69,6 +70,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.filename }}
-          path: out/${{ github.event.inputs.filename }}
+          name: video-menu
+          path: out/
           retention-days: 7
