@@ -47,22 +47,34 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
     const [localName, setLocalName] = useState(item.name);
     const [localDesc, setLocalDesc] = useState(item.description);
     const [localPrice, setLocalPrice] = useState(item.price);
+    const [hasChanges, setHasChanges] = useState(false);
 
     // Sync local state if external props change (e.g. AI refinement)
     useEffect(() => {
         setLocalName(item.name);
         setLocalDesc(item.description);
         setLocalPrice(item.price);
+        setHasChanges(false);
     }, [item.name, item.description, item.price]);
 
-    const handleBlur = (field: keyof MenuItem, value: string) => {
-        if (item[field] !== value) {
-            onUpdate(index, { [field]: value });
-        }
+    const handleFieldChange = (field: 'name' | 'description' | 'price', value: string) => {
+        if (field === 'name') setLocalName(value);
+        if (field === 'description') setLocalDesc(value);
+        if (field === 'price') setLocalPrice(value);
+        setHasChanges(true);
+    };
+
+    const handleSave = () => {
+        onUpdate(index, {
+            name: localName,
+            description: localDesc,
+            price: localPrice
+        });
+        setHasChanges(false);
     };
 
     return (
-        <div className="p-4 space-y-3 border border-white/5 bg-white/5 rounded-2xl group hover:border-white/10 transition-all">
+        <div className={`p-4 space-y-3 border rounded-2xl group transition-all ${hasChanges ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/5 bg-white/5'}`}>
             <div className="flex gap-4">
                 {/* Image Placeholder/Preview */}
                 <div className="relative group/img w-20 h-20 rounded-xl overflow-hidden bg-black/40 border border-white/5 shrink-0 flex items-center justify-center">
@@ -86,8 +98,8 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
                         />
                     </label>
                     {item.image?.startsWith('blob:') && (
-                        <div className="absolute top-1 right-1" title="Pendiente de subir a la nube">
-                            <Cloud size={10} className="text-amber-500" />
+                        <div className="absolute top-1 right-1" title="Error: Imagen local (No se subió a la nube)">
+                            <Cloud size={12} className="text-red-500 animate-pulse" />
                         </div>
                     )}
                 </div>
@@ -96,8 +108,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
                     <div className="flex items-center justify-between gap-2">
                         <input
                             value={localName}
-                            onChange={(e) => setLocalName(e.target.value)}
-                            onBlur={(e) => handleBlur('name', e.target.value)}
+                            onChange={(e) => handleFieldChange('name', e.target.value)}
                             className="w-full text-sm font-bold text-white bg-transparent border-none focus:ring-0 p-0 placeholder:text-white/20"
                             placeholder="Nombre del platillo"
                         />
@@ -110,8 +121,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
                     </div>
                     <textarea
                         value={localDesc}
-                        onChange={(e) => setLocalDesc(e.target.value)}
-                        onBlur={(e) => handleBlur('description', e.target.value)}
+                        onChange={(e) => handleFieldChange('description', e.target.value)}
                         className="w-full text-[11px] text-white/50 bg-transparent border-none focus:ring-0 p-0 resize-none h-12 leading-relaxed placeholder:text-white/10"
                         placeholder="Descripción"
                     />
@@ -120,16 +130,25 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
                             <span className="text-xs font-bold">$</span>
                             <input
                                 value={localPrice.replace('$', '')}
-                                onChange={(e) => setLocalPrice(`$${e.target.value}`)}
-                                onBlur={(e) => handleBlur('price', `$${e.target.value.replace('$', '')}`)}
+                                onChange={(e) => handleFieldChange('price', `$${e.target.value}`)}
                                 className="w-16 text-xs font-bold bg-transparent border-none focus:ring-0 p-0 placeholder:text-amber-500/20"
                                 placeholder="0.00"
                             />
                         </div>
-                        {/* Indicador de que el cambio es local */}
-                        <div className="flex items-center gap-1 text-[9px] uppercase tracking-tighter text-white/20">
-                            <Save size={10} /> Sync
-                        </div>
+
+                        {hasChanges ? (
+                            <button
+                                onClick={handleSave}
+                                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-black text-[10px] font-bold hover:bg-amber-400 transition-all animate-in zoom-in-50"
+                            >
+                                <Save size={12} />
+                                Guardar Item
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-1 text-[9px] uppercase tracking-tighter text-white/20">
+                                <CheckCircle2 size={10} className="text-green-500/50" /> Sincronizado
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -225,13 +244,26 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
 
         setIsGenerating(true);
         setCurrentAction('Subiendo a la nube...');
+
         try {
+            // Asegurar auth antes de subir
+            const { auth } = await import('../services/firebaseConfig');
+            const { signInAnonymously } = await import('firebase/auth');
+
+            if (!auth.currentUser) {
+                console.log('🔄 Re-autenticando para subida...');
+                await signInAnonymously(auth);
+            }
+
             const url = await uploadMenuItemImage(DEFAULT_USER_ID, file, file.name);
             updateItem(index, { image: url });
         } catch (error: any) {
             console.error('Error uploading:', error);
-            const errorMessage = error?.message || 'Error desconocido';
-            alert(`⚠️ Error de subida a la nube: ${errorMessage}\n\nLa imagen es local; no funcionará en el render Pro.`);
+            const errorMessage = error?.code === 'storage/unauthorized'
+                ? 'Permiso denegado en Firebase. Revisa las Reglas de Storage en la consola.'
+                : (error?.message || 'Error desconocido');
+
+            alert(`⚠️ Error de subida a la nube: ${errorMessage}\n\nLa imagen se muestra localmente; no funcionará en el render Pro.`);
         } finally {
             setIsGenerating(false);
             setCurrentAction(null);
