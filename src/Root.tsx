@@ -25,6 +25,12 @@ const calculateMenuDuration = (props: PremiumMenuProps) => {
   const sceneDuration = props.sceneDuration || 120;
   const transitionFrames = 25;
   const itemCount = props.menuItems?.length || 4;
+
+  if (props.isSeamlessLoop) {
+    // En modo seamless, terminamos justo cuando la transición al primer ítem duplicado llega a ser opaca
+    return Math.max(itemCount * (sceneDuration - transitionFrames), 1);
+  }
+
   return Math.max(itemCount * (sceneDuration - transitionFrames) + transitionFrames, 1);
 };
 
@@ -84,9 +90,10 @@ export const RemotionRoot: React.FC = () => {
         fps={30}
         width={1920}
         height={1080}
+        defaultProps={sampleMenuData}
       />
       {/* 🆕 Versión dinámica con Props */}
-      <Composition<PremiumMenuProps>
+      <Composition
         id="PremiumMenuDynamic"
         component={PremiumMenuDynamic}
         durationInFrames={currentDuration}

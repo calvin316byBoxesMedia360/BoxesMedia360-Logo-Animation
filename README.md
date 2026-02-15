@@ -26,11 +26,11 @@ Este proyecto soporta **Inglés** y **Español** en toda la documentación y có
 This MVP demonstrates **Phase 4** of the Advanced Computational Cinematography Methodology: **Latent Synthesis and Temporal Interpolation** using Google's Veo 3.1 model through Vertex AI.
 
 **Key Features:**
-- ✨ AI-powered "First and Last Frame" interpolation
-- 🎬 Programmatic video composition with Remotion
-- ☁️ Google Cloud Vertex AI integration
-- 🔄 Bilingual support (EN/ES)
-- 📊 Learning system with interaction logging
+- 🍽️ **Digital Menu Studio**: Programmatic high-end motion graphics for menus.
+- ✨ AI-powered "First and Last Frame" interpolation.
+- 🎬 Programmatic video composition with Remotion.
+- ⚡ **Cloud Rendering**: GitHub Actions integration for fast exports (<60s).
+- 🔄 Bilingual support (EN/ES).
 
 ### Quick Start
 
@@ -66,11 +66,11 @@ npx remotion render
 Este MVP demuestra la **Fase 4** de la Metodología Avanzada de Cinematografía Computacional: **Síntesis Latente e Interpolación Temporal** usando el modelo Veo 3.1 de Google a través de Vertex AI.
 
 **Características Principales:**
-- ✨ Interpolación "Primer y Último Frame" con IA
-- 🎬 Composición programática de video con Remotion
-- ☁️ Integración con Google Cloud Vertex AI
-- 🔄 Soporte bilingüe (EN/ES)
-- 📊 Sistema de aprendizaje con registro de interacciones
+- 🍽️ **Digital Menu Studio**: Dashboard para menús digitales dinámicos.
+- ✨ Interpolación "Primer y Último Frame" con IA.
+- 🎬 Composición programática de video con Remotion.
+- ⚡ **Cloud Rendering**: Integración con GitHub Actions para renderizado rápido.
+- 🔄 Soporte bilingüe (EN/ES).
 
 ### Inicio Rápido
 

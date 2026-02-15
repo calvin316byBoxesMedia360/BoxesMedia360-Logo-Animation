@@ -667,6 +667,31 @@ Esta sección define el **flujo de ejecución paso a paso** para todas las opera
 
 ---
 
+---
+
+### Chain 4: Cloud Rendering (GitHub Actions)
+
+**Trigger**: User clicks "Download MP4" in the Dashboard.
+
+**Steps**:
+
+1.  **Prepare Props**: Convert scene duration from seconds to frames (30fps).
+2.  **Dispatch Workflow**: Call GitHub API to trigger `render.yml`.
+3.  **Execution (Cloud)**:
+    - GitHub Runner installs dependencies and Remotion browser.
+    - `npx remotion render` is executed using `PremiumMenuDynamic`.
+    - Images are resolved using `staticFile` and path normalization.
+4.  **Artifact Upload**: Rendered video is stored as a GitHub Action Artifact.
+5.  **User Notification**: Dashboard provides a direct link to the workflow run.
+
+**Success Criteria**:
+- ✅ Workflow triggered via API.
+- ✅ Video rendered in < 60s.
+- ✅ All images correctly decoded.
+- ✅ Artifact available for download.
+
+---
+
 ## 🔒 System Guarantees / Garantías del Sistema
 
 ### English
@@ -675,6 +700,7 @@ Esta sección define el **flujo de ejecución paso a paso** para todas las opera
 2. **Learning Enabled**: System improves with every interaction
 3. **Error Resilience**: Graceful degradation with clear recovery paths
 4. **Documentation Complete**: No undocumented features or APIs
+5. **Cloud Ready**: One-click cloud rendering via GitHub Actions
 
 ### Español
 
@@ -682,9 +708,10 @@ Esta sección define el **flujo de ejecución paso a paso** para todas las opera
 2. **Aprendizaje Habilitado**: El sistema mejora con cada interacción
 3. **Resiliencia de Errores**: Degradación elegante con rutas de recuperación claras
 4. **Documentación Completa**: Sin características o APIs sin documentar
+5. **Listo para la Nube**: Renderizado en la nube con un solo clic vía GitHub Actions
 
 ---
 
-**Last Updated / Última Actualización**: 2026-01-31
+**Last Updated / Última Actualización**: 2026-02-14
 
-**Version / Versión**: 1.0.0
+**Version / Versión**: 1.1.0

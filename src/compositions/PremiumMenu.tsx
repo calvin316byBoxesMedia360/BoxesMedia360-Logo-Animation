@@ -16,6 +16,9 @@ export interface PremiumMenuProps {
     restaurantName?: string;
     accentColor?: string;
     sceneDuration?: number;
+    logoUri?: string;
+    backgroundMusic?: string;
+    isSeamlessLoop?: boolean;
     [key: string]: any;
 }
 
@@ -316,14 +319,24 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     restaurantName = 'Los Cuates',
     accentColor = DEFAULT_COLORS.gold,
     sceneDuration = 120,
+    isSeamlessLoop = false,
+    logoUri,
 }) => {
+    // Si es seamless, añadimos un duplicado del primer ítem al final para la transición de retorno
+    const itemsToRender = useMemo(() => {
+        if (isSeamlessLoop && menuItems.length > 0) {
+            return [...menuItems, menuItems[0]];
+        }
+        return menuItems;
+    }, [menuItems, isSeamlessLoop]);
+
     return (
         <AbsoluteFill style={{ backgroundColor: DEFAULT_COLORS.dark }}>
             <GoldenParticles color={accentColor} />
 
-            {menuItems.map((item, index) => (
+            {itemsToRender.map((item, index) => (
                 <Sequence
-                    key={index}
+                    key={`${index}-${item.name}`}
                     from={index * (sceneDuration - TRANSITION_FRAMES)}
                     durationInFrames={sceneDuration}
                 >
@@ -334,6 +347,22 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
                     />
                 </Sequence>
             ))}
+
+            {logoUri && (
+                <AbsoluteFill style={{ pointerEvents: 'none' }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 40,
+                        right: 40,
+                        width: 150,
+                        height: 150,
+                        opacity: 0.8,
+                        filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.5))',
+                    }}>
+                        <Img src={logoUri} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    </div>
+                </AbsoluteFill>
+            )}
 
             <div
                 style={{
