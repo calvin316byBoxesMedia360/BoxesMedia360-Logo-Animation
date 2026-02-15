@@ -26,8 +26,27 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Cache node modules
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache Remotion binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/remotion
+          key: ${{ runner.os }}-remotion-${{ hashFiles('**/package.json') }}
+
       - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
+
+      - name: Ensure Remotion dependencies
+        run: npx remotion browser ensure
 
       - name: Render video
         run: |
