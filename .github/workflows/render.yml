@@ -1,9 +1,16 @@
-name: Render Remotion Video
+name: Render Pro Menu Video
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:  # Permite ejecutar manualmente
+  workflow_dispatch:
+    inputs:
+      menu_props:
+        description: 'JSON con las propiedades del menú'
+        required: true
+        default: '{}'
+      filename:
+        description: 'Nombre del archivo de salida'
+        required: true
+        default: 'menu-video.mp4'
 
 jobs:
   render:
@@ -23,11 +30,26 @@ jobs:
         run: npm ci
 
       - name: Render video
-        run: npx remotion render HolographicParticlesV2 out/holographic-v2.mp4
+        run: |
+          npx remotion render src/index.ts PremiumMenuDynamic out/${{ github.event.inputs.filename }} --props '${{ github.event.inputs.menu_props }}'
 
-      - name: Upload rendered video
+      - name: Upload to Firebase Storage
+        if: success()
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          # Solo ejecutamos esto si el secreto está configurado
+          if [ -n "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "📤 Subiendo a Firebase Storage..."
+            # Aquí iría un script de node para subir el archivo usando el service account
+            node scripts/upload-to-storage-action.js out/${{ github.event.inputs.filename }}
+          else
+            echo "⚠️ Secreto FIREBASE_SERVICE_ACCOUNT no configurado. Solo se guardará como artifact de GitHub."
+          fi
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: holographic-v2-video
-          path: out/holographic-v2.mp4
-          retention-days: 30
+          name: ${{ github.event.inputs.filename }}
+          path: out/${{ github.event.inputs.filename }}
+          retention-days: 7
