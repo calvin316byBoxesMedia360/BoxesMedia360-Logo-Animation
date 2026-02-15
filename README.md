@@ -1,173 +1,113 @@
-# Computational Cinematography MVP
+# 🎥 Digital Menu Studio - Manual de Operaciones
 
-**Cinematografía Computacional con Remotion + Vertex AI (Veo 3.1)**
-
-> 🎬 Create "impossible" video transitions using AI-powered generative models and programmatic video composition.
-> 
-> 🎥 Crea transiciones de video "imposibles" usando modelos generativos de IA y composición programática de video.
+Este documento contiene todo el conocimiento técnico y operativo necesario para mantener, arreglar y escalar el Digital Menu Studio. **Lee esto antes de realizar cualquier cambio técnico.**
 
 ---
 
-## 🌐 Language / Idioma
+## 🛠️ 1. Arquitectura del Sistema
 
-This project supports **English** and **Spanish** throughout all documentation and code.
-
-Este proyecto soporta **Inglés** y **Español** en toda la documentación y código.
-
-- 📘 [English Documentation](#english-documentation)
-- 📗 [Documentación en Español](#documentación-en-español)
-
----
-
-## 📘 English Documentation
-
-### What is this?
-
-This MVP demonstrates **Phase 4** of the Advanced Computational Cinematography Methodology: **Latent Synthesis and Temporal Interpolation** using Google's Veo 3.1 model through Vertex AI.
-
-**Key Features:**
-- 🍽️ **Digital Menu Studio**: Programmatic high-end motion graphics for menus.
-- ✨ AI-powered "First and Last Frame" interpolation.
-- 🎬 Programmatic video composition with Remotion.
-- ⚡ **Cloud Rendering**: GitHub Actions integration for fast exports (<60s).
-- 🔄 Bilingual support (EN/ES).
-
-### Quick Start
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Render video
-npx remotion render
-```
-
-### Documentation
-
-- 📖 **[Setup Guide (EN)](./docs/SETUP_EN.md)** - Complete Google Cloud and Vertex AI configuration
-- 🔧 **[API Reference](./docs/API_REFERENCE.md)** - Full API documentation
-- 🚨 **[Troubleshooting](./docs/TROUBLESHOOTING.md)** - Common issues and solutions
-- 📋 **[System Contract](./SYSTEM_CONTRACT.md)** - System rules and workflows
-
-### Examples
-
-- 🎯 **[Basic Transition](./examples/basic-transition/)** - Simple keyframe interpolation
-- 🚀 **[Advanced Examples](./examples/advanced/)** - Complex multi-scene transitions
+El sistema es una plataforma híbrida de edición de video en tiempo real:
+- **Frontend**: React + Vite (Dashboard).
+- **Motor de Video**: Remotion (Live Preview & Render).
+- **Backend / Persistencia**: Firebase (Firestore, Storage, Auth).
+- **Renderizado Professional**: GitHub Actions (Generación de MP4 en la nube).
 
 ---
 
-## 📗 Documentación en Español
+## 🔐 2. Configuración Crítica de Firebase
 
-### ¿Qué es esto?
+Si el sistema deja de guardar o las imágenes no suben, revisa estos 3 puntos en la [Consola de Firebase](https://console.firebase.google.com/):
 
-Este MVP demuestra la **Fase 4** de la Metodología Avanzada de Cinematografía Computacional: **Síntesis Latente e Interpolación Temporal** usando el modelo Veo 3.1 de Google a través de Vertex AI.
+### A. Autenticación (Auth)
+- **Estado**: Debe estar habilitado **Anonymous Sign-in**.
+- Sin esto, el sistema no tendrá un UID y las reglas de seguridad bloquearán las subidas.
 
-**Características Principales:**
-- 🍽️ **Digital Menu Studio**: Dashboard para menús digitales dinámicos.
-- ✨ Interpolación "Primer y Último Frame" con IA.
-- 🎬 Composición programática de video con Remotion.
-- ⚡ **Cloud Rendering**: Integración con GitHub Actions para renderizado rápido.
-- 🔄 Soporte bilingüe (EN/ES).
+### B. Base de Datos (Firestore)
+Para que el sistema sincronice los cambios:
+1. Crea la base de datos en **Native Mode**.
+2. Ubicación recomendada: `nam5 (us-central)`.
+3. **Reglas de Seguridad (Debug)**:
+   ```javascript
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /{document=**} {
+         allow read, write: if true;
+       }
+     }
+   }
+   ```
 
-### Inicio Rápido
-
-```bash
-# Instalar dependencias
-npm install
-
-# Iniciar servidor de desarrollo
-npm run dev
-
-# Renderizar video
-npx remotion render
-```
-
-### Documentación
-
-- 📖 **[Guía de Configuración (ES)](./docs/SETUP_ES.md)** - Configuración completa de Google Cloud y Vertex AI
-- 🔧 **[Referencia de API](./docs/API_REFERENCE.md)** - Documentación completa de la API
-- 🚨 **[Solución de Problemas](./docs/TROUBLESHOOTING.md)** - Problemas comunes y soluciones
-- 📋 **[Contrato del Sistema](./SYSTEM_CONTRACT.md)** - Reglas y flujos de trabajo del sistema
-
-### Ejemplos
-
-- 🎯 **[Transición Básica](./examples/transicion-basica/)** - Interpolación simple de keyframes
-- 🚀 **[Ejemplos Avanzados](./examples/advanced/)** - Transiciones complejas multi-escena
+### C. Almacenamiento (Storage)
+Para que las imágenes funcionen en el video final:
+1. **Reglas de Seguridad (Debug)**:
+   ```javascript
+   rules_version = '2';
+   service firebase.storage {
+     match /b/{bucket}/o {
+       match /{allPaths=**} {
+         allow read, write: if true;
+       }
+     }
+   }
+   ```
 
 ---
 
-## 🏗️ Project Structure / Estructura del Proyecto
+## ☁️ 3. El Sistema de Renderizado (Paso a Paso)
 
-```
-Computational-Cinematography-MVP/
-├── src/
-│   ├── compositions/       # Video compositions / Composiciones de video
-│   ├── services/          # Vertex AI integration / Integración Vertex AI
-│   ├── utils/             # Utilities and logging / Utilidades y logging
-│   └── types/             # TypeScript definitions / Definiciones TypeScript
-├── docs/                  # Detailed documentation / Documentación detallada
-├── examples/              # Usage examples / Ejemplos de uso
-├── README.md              # This file / Este archivo
-├── SYSTEM_CONTRACT.md     # System contract / Contrato del sistema
-├── LEARNING_LOG.md        # Learning log / Registro de aprendizaje
-└── LEARNING_FEEDBACK.json # Structured feedback / Feedback estructurado
+### El icono de la Nube Naranja (Cloud Sync)
+- **Significado**: La imagen es "Local". Solo tú la ves en tu navegador.
+- **Problema**: El servidor de renderizado NO puede ver tu disco duro.
+- **Solución**: Pulsa el botón de la cámara y vuelve a seleccionar la imagen. Cuando la nube naranja desaparezca, la imagen está en Firebase y lista para el video.
+
+### ¿Por qué falla el render?
+El 99% de los fallos en GitHub Actions son por:
+1. Imágenes locales (`blob:...`) que no se subieron a Firebase.
+2. Token de GitHub expirado en el archivo `.env`.
+
+---
+
+## 💻 4. Guía de Desarrollo Local
+
+### Comandos Principales
+- `npm run dev`: Abre Remotion Studio (Visualización técnica del video).
+- `npm run dashboard`: Abre la aplicación principal de edición (Editor para el usuario).
+
+### Variables de Entorno (`.env`)
+Asegúrate de tener estas variables configuradas:
+```env
+VITE_GITHUB_REPO=tu-usuario/tu-repo
+VITE_GITHUB_TOKEN=tu-github-token
 ```
 
 ---
 
-## 🚀 Core Concepts / Conceptos Principales
+## 🚑 5. Solución de Problemas Comunes (FAQ)
 
-### English
+#### Q: "No se guardan los cambios cuando escribo"
+**A**: Revisa las pestañas de cada platillo. Ahora hay un botón **GUARDAR** que aparece al escribir. Debes pulsarlo para confirmar el cambio. También verifica que la base de datos de Firestore esté creada.
 
-**Veo 3.1 Integration**: This MVP uses Google's state-of-the-art video generation model to create seamless transitions between two keyframes, enabling "impossible" camera movements and scene morphing.
+#### Q: "Error 0x80070323 al abrir el video en Windows"
+**A**: Windows Media Player intenta abrir el video antes de que termine de descargarse o mientras el navegador lo tiene bloqueado. **Solución**: Abre el archivo con **VLC Media Player** o espera 10 segundos.
 
-**Remotion Orchestration**: Remotion acts as the central orchestrator, managing timing, sequencing, and composition of AI-generated clips.
+#### Q: "Sale un Error Unauthorized al subir imagen"
+**A**: Tus reglas de Firebase Storage están bloqueando el acceso. Ve a la consola de Firebase y asegúrate de que el `allow write: if true;` esté activo y **Publicado**.
 
-### Español
-
-**Integración Veo 3.1**: Este MVP usa el modelo de generación de video de última generación de Google para crear transiciones fluidas entre dos keyframes, permitiendo movimientos de cámara "imposibles" y morfología de escenas.
-
-**Orquestación Remotion**: Remotion actúa como el orquestador central, gestionando el timing, secuenciación y composición de clips generados por IA.
-
----
-
-## 📊 Learning System / Sistema de Aprendizaje
-
-This project includes a **continuous learning system** that logs every interaction and improves over time.
-
-Este proyecto incluye un **sistema de aprendizaje continuo** que registra cada interacción y mejora con el tiempo.
-
-- 📝 **[Learning Log](./LEARNING_LOG.md)** - Human-readable interaction history
-- 📈 **[Learning Feedback](./LEARNING_FEEDBACK.json)** - Structured data for analysis
+#### Q: "El video no hace bucle (loop)"
+**A**: Los archivos de video (`.mp4`) no saben que deben repetirse solos. Es función del reproductor de TV o computadora activar el modo "Repetir". Te recomendamos usar VLC en modo Loop.
 
 ---
 
-## 🤝 Contributing / Contribuir
+## 📝 6. Contrato de Sincronización
 
-We welcome contributions in **both English and Spanish**!
-
-¡Aceptamos contribuciones en **Inglés y Español**!
-
----
-
-## 📄 License / Licencia
-
-MIT License - See LICENSE file for details
+Cada vez que el sistema se inicia, realiza esta cadena:
+1. **Auth**: Se loguea anónimamente para obtener un UID.
+2. **Local Load**: Carga los datos guardados en el navegador (Rápido).
+3. **Cloud Sync**: Busca en Firestore si hay una versión más nueva bajo tu UID.
+4. **Push Update**: Al pulsar el botón "Sync Cloud" superior, se fuerza el guardado de TODO en la nube.
 
 ---
 
-## 🔗 Links / Enlaces
-
-- 🌐 [Remotion Documentation](https://www.remotion.dev/docs)
-- ☁️ [Google Vertex AI](https://cloud.google.com/vertex-ai)
-- 🎥 [Veo 3.1 Model](https://deepmind.google/technologies/veo/)
-- 📚 [Full Methodology Document](../Metodologia-Tecnica-Avanzada/METODOLOGIA_ORIGINAL.md)
-
----
-
-**Built with ❤️ using Remotion and Google Cloud**
-
-**Construido con ❤️ usando Remotion y Google Cloud**
+**Última revisión completa**: 15 de Febrero, 2026.
+**Estado del sistema**: Operativo y Sincronizado.

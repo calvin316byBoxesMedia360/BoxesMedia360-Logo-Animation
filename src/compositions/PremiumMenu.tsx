@@ -1,5 +1,5 @@
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing, Img, staticFile, Sequence } from 'remotion';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 // ============================================
 // 📋 TIPOS - DEFINICIÓN DE PROPS
@@ -32,6 +32,7 @@ const DEFAULT_COLORS = {
 };
 
 const TRANSITION_FRAMES = 25;
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop'; // Comida genérica premium
 
 // ============================================
 // ✨ PARTÍCULAS DORADAS FLOTANTES
@@ -92,6 +93,7 @@ interface DishSceneProps {
 
 const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor }) => {
     const frame = useCurrentFrame();
+    const [imgError, setImgError] = useState(false);
 
     // Ken Burns
     const scale = interpolate(frame, [0, sceneDuration], [1, 1.12], {
@@ -116,6 +118,19 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
     );
 
     const opacity = Math.min(fadeIn, fadeOut);
+
+    // BLINDAJE 1: Auto-FontSize dinámico basado en longitud de caracteres
+    const getNameFontSize = (text: string) => {
+        if (text.length > 30) return 48;
+        if (text.length > 20) return 60;
+        return 72;
+    };
+
+    const getDescFontSize = (text: string) => {
+        if (text.length > 80) return 20;
+        if (text.length > 50) return 24;
+        return 28;
+    };
 
     // Text animation
     const textDelay = 15;
@@ -153,25 +168,28 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
         { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
     );
 
-    // Resolución de imagen inteligente
+    // Resolución de imagen inteligente con fallback
     const imageSrc = useMemo(() => {
-        if (!item.image) return '';
+        if (imgError) return FALLBACK_IMAGE;
+        if (!item.image) return FALLBACK_IMAGE;
+
         if (item.image.startsWith('http') || item.image.startsWith('blob:')) {
             return item.image;
         }
-        // Limpiar el path si viene con 'public/' (común en el Dashboard)
+
         const cleanPath = item.image.startsWith('public/')
             ? item.image.replace('public/', '')
             : item.image;
 
         return staticFile(cleanPath);
-    }, [item.image]);
+    }, [item.image, imgError]);
 
     return (
         <AbsoluteFill style={{ opacity }}>
             <div style={{ position: 'absolute', width: '100%', height: '100%', overflow: 'hidden' }}>
                 <Img
                     src={imageSrc}
+                    onError={() => setImgError(true)}
                     style={{
                         width: '100%',
                         height: '100%',
@@ -204,23 +222,25 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
             <div
                 style={{
                     position: 'absolute',
-                    bottom: 60,
-                    left: 60,
-                    right: 60,
+                    bottom: 80,
+                    left: 80,
+                    right: 80,
                     opacity: textFadeOut,
                 }}
             >
                 <h1
                     style={{
                         fontFamily: '"Playfair Display", Georgia, serif',
-                        fontSize: 72,
-                        fontWeight: 700,
+                        fontSize: getNameFontSize(item.name),
+                        fontWeight: 900,
                         color: DEFAULT_COLORS.cream,
                         margin: 0,
-                        textShadow: `2px 2px 0 ${DEFAULT_COLORS.dark}, 0 0 30px rgba(0,0,0,0.8)`,
+                        textShadow: `4px 4px 0 rgba(0,0,0,0.5), 0 0 40px rgba(0,0,0,0.8)`,
                         opacity: nameOpacity,
                         transform: `translateY(${nameY}px)`,
-                        letterSpacing: '0.02em',
+                        letterSpacing: '-0.02em',
+                        lineHeight: 1.1,
+                        maxWidth: '80%'
                     }}
                 >
                     {item.name}
@@ -229,13 +249,16 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
                 <p
                     style={{
                         fontFamily: '"Lato", Arial, sans-serif',
-                        fontSize: 28,
-                        fontWeight: 300,
+                        fontSize: getDescFontSize(item.description),
+                        fontWeight: 400,
                         color: DEFAULT_COLORS.cream,
-                        margin: '15px 0 0 0',
-                        textShadow: '1px 1px 4px rgba(0,0,0,0.8)',
+                        margin: '20px 0 0 0',
+                        textShadow: '2px 2px 8px rgba(0,0,0,0.9)',
                         opacity: descOpacity,
                         letterSpacing: '0.05em',
+                        lineHeight: 1.4,
+                        maxWidth: '70%',
+                        fontStyle: 'italic'
                     }}
                 >
                     {item.description}
@@ -243,39 +266,49 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
 
                 <div
                     style={{
-                        marginTop: 25,
+                        marginTop: 35,
                         display: 'inline-block',
                         opacity: priceOpacity,
                         transform: `scale(${priceScale})`,
                     }}
                 >
-                    <span
-                        style={{
-                            fontFamily: '"Playfair Display", Georgia, serif',
-                            fontSize: 42,
-                            fontWeight: 700,
-                            color: accentColor,
-                            textShadow: `0 0 10px ${accentColor}, 0 0 20px ${accentColor}50`,
-                            letterSpacing: '0.02em',
-                        }}
-                    >
-                        {item.price}
-                    </span>
+                    <div style={{
+                        backgroundColor: `${accentColor}20`,
+                        backdropFilter: 'blur(10px)',
+                        padding: '10px 25px',
+                        borderRadius: '15px',
+                        border: `1px solid ${accentColor}40`,
+                    }}>
+                        <span
+                            style={{
+                                fontFamily: '"Playfair Display", Georgia, serif',
+                                fontSize: 48,
+                                fontWeight: 900,
+                                color: accentColor,
+                                textShadow: `0 0 15px ${accentColor}80`,
+                                letterSpacing: '0.02em',
+                            }}
+                        >
+                            {item.price}
+                        </span>
+                    </div>
                 </div>
             </div>
 
+            {/* Decoración lateral */}
             <div
                 style={{
                     position: 'absolute',
-                    bottom: 40,
-                    left: 60,
-                    width: interpolate(frame, [20, 50], [0, 200], {
+                    bottom: 60,
+                    left: 80,
+                    width: interpolate(frame, [20, 50], [0, 300], {
                         extrapolateLeft: 'clamp',
                         extrapolateRight: 'clamp',
                     }),
-                    height: 2,
+                    height: 4,
                     background: `linear-gradient(90deg, ${accentColor}, transparent)`,
                     opacity: textFadeOut,
+                    boxShadow: `0 0 15px ${accentColor}`
                 }}
             />
         </AbsoluteFill>
@@ -286,7 +319,6 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
 // 🎬 COMPOSICIÓN PRINCIPAL CON PROPS
 // ============================================
 
-// Datos por defecto para preview en Studio
 const DEFAULT_MENU_ITEMS: MenuItem[] = [
     {
         image: 'food1.jpg',
@@ -299,19 +331,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
         name: 'Mojarra a la Diabla',
         description: 'Pescado entero con camarones en salsa picante',
         price: '$24.99',
-    },
-    {
-        image: 'food3.jpg',
-        name: 'Micheladas Premium',
-        description: 'Con camarones frescos y cerveza importada',
-        price: '$12.99',
-    },
-    {
-        image: 'food4.jpg',
-        name: 'Pupusas Tradicionales',
-        description: 'Con curtido y salsa roja casera',
-        price: '$9.99',
-    },
+    }
 ];
 
 export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
@@ -322,13 +342,25 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     isSeamlessLoop = false,
     logoUri,
 }) => {
-    // Si es seamless, añadimos un duplicado del primer ítem al final para la transición de retorno
-    const itemsToRender = useMemo(() => {
-        if (isSeamlessLoop && menuItems.length > 0) {
-            return [...menuItems, menuItems[0]];
+    // BLINDAJE 3: Fallback para menú vacío (Evita crash de Remotion)
+    const safeMenuItems = useMemo(() => {
+        if (!menuItems || menuItems.length === 0) {
+            return [{
+                name: 'Menú en Construcción',
+                description: 'Próximamente deliciosos platillos para ti.',
+                price: '$0.00',
+                image: FALLBACK_IMAGE
+            }];
         }
         return menuItems;
-    }, [menuItems, isSeamlessLoop]);
+    }, [menuItems]);
+
+    const itemsToRender = useMemo(() => {
+        if (isSeamlessLoop && safeMenuItems.length > 0) {
+            return [...safeMenuItems, safeMenuItems[0]];
+        }
+        return safeMenuItems;
+    }, [safeMenuItems, isSeamlessLoop]);
 
     return (
         <AbsoluteFill style={{ backgroundColor: DEFAULT_COLORS.dark }}>
@@ -336,7 +368,7 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
 
             {itemsToRender.map((item, index) => (
                 <Sequence
-                    key={`${index}-${item.name}`}
+                    key={`${index}-${item.name}-${index}`}
                     from={index * (sceneDuration - TRANSITION_FRAMES)}
                     durationInFrames={sceneDuration}
                 >
@@ -376,5 +408,4 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     );
 };
 
-// Mantener export original para compatibilidad
 export const PremiumMenu = PremiumMenuDynamic;
