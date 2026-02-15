@@ -50,7 +50,7 @@ jobs:
 
       - name: Render video
         run: |
-          npx remotion render src/Root.tsx PremiumMenuDynamic out/${{ github.event.inputs.filename }} --props '${{ github.event.inputs.menu_props }}'
+          npx remotion render src/index.ts PremiumMenuDynamic out/${{ github.event.inputs.filename }} --props '${{ github.event.inputs.menu_props }}'
 
       - name: Upload to Firebase Storage
         if: success()
