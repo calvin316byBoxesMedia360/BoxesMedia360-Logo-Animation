@@ -1,5 +1,5 @@
 import "./index.css";
-import { Composition } from "remotion";
+import { Composition, getInputProps } from "remotion";
 import { MyComp } from "./compositions/MyComp";
 import { BoxesMediaLogo } from "./compositions/BoxesMediaLogo";
 import { HolographicParticles } from "./compositions/HolographicParticles";
@@ -25,10 +25,15 @@ const calculateMenuDuration = (props: PremiumMenuProps) => {
   const sceneDuration = props.sceneDuration || 120;
   const transitionFrames = 25;
   const itemCount = props.menuItems?.length || 4;
-  return itemCount * (sceneDuration - transitionFrames) + transitionFrames;
+  return Math.max(itemCount * (sceneDuration - transitionFrames) + transitionFrames, 1);
 };
 
 export const RemotionRoot: React.FC = () => {
+  // Obtener props de entrada para renderizado dinámico
+  const inputProps = getInputProps() as any;
+  const hasValidProps = inputProps && inputProps.menuItems && inputProps.menuItems.length > 0;
+  const currentDuration = calculateMenuDuration(hasValidProps ? inputProps : sampleMenuData);
+
   return (
     <>
       <Composition
@@ -84,7 +89,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition<PremiumMenuProps>
         id="PremiumMenuDynamic"
         component={PremiumMenuDynamic}
-        durationInFrames={calculateMenuDuration(sampleMenuData)}
+        durationInFrames={currentDuration}
         fps={30}
         width={1920}
         height={1080}

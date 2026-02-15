@@ -1,0 +1,31 @@
+{
+    "menuItems": [
+        {
+            "image": "food1.jpg",
+            "name": "Enchiladas Rojas",
+            "description": "Tortillas bañadas en salsa roja con pollo",
+            "price": "$13.99"
+        },
+        {
+            "image": "food2.jpg",
+            "name": "Parrillada de Mariscos",
+            "description": "Camarones, pescado y pulpo a la plancha",
+            "price": "$29.99"
+        },
+        {
+            "image": "food3.jpg",
+            "name": "Coctel de Camarón",
+            "description": "Camarones frescos en salsa de tomate",
+            "price": "$15.99"
+        },
+        {
+            "image": "food4.jpg",
+            "name": "Pupusas de Loroco",
+            "description": "Rellenas de queso y flor de loroco",
+            "price": "$8.99"
+        }
+    ],
+    "restaurantName": "Restaurante Los Cuates",
+    "accentColor": "#D4AF37",
+    "sceneDuration": 120
+}

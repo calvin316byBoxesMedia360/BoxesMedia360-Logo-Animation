@@ -198,7 +198,10 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps, onE
 
             // Disparar workflow de GitHub Actions
             const result = await triggerRenderWorkflow({
-                menuConfig: props,
+                menuConfig: {
+                    ...props,
+                    sceneDuration: (props.sceneDuration || 4) * 30 // Convertir segundos a frames (30fps)
+                },
                 filename: `${props.restaurantName || 'menu'}-${Date.now()}.mp4`
             });
 
@@ -208,13 +211,20 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps, onE
             // Abrir la página del workflow en GitHub
             window.open(result.htmlUrl, '_blank');
 
-            // Mostrar mensaje con instrucciones
+            // Copiar el link al portapapeles automáticamente para facilitar el pegado en otros perfiles
+            try {
+                await navigator.clipboard.writeText(result.htmlUrl);
+            } catch (e) {
+                console.warn('No se pudo copiar el link automáticamente');
+            }
+
+            // Mostrar mensaje con instrucciones detalladas para perfiles de Chrome
             alert(
-                `🚀 ¡Renderizado iniciado en GitHub Actions!\n\n` +
-                `📊 Estado: ${result.status}\n\n` +
-                `El video se está renderizando en la nube (2-5 minutos).\n\n` +
-                `Se abrió una nueva pestaña para que puedas ver el progreso.\n\n` +
-                `Una vez completado, descarga el video desde la sección "Artifacts".`
+                `🚀 ¡Renderizado iniciado satisfactoriamente!\n\n` +
+                `1. Se ha intentado abrir el progreso en una nueva pestaña.\n` +
+                `2. El link de seguimiento se ha COPIADO a tu portapapeles.\n\n` +
+                `💡 TIP PARA PERFILES: Si el link se abrió en la ventana de Chrome equivocada, simplemente ve a tu ventana de "Calvin" y presiona Ctrl + V para pegar el link y ver el progreso ahí.\n\n` +
+                `El renderizado tardará de 2 a 5 minutos. Una vez completado, busca el video en la sección "Artifacts" al final de la página de GitHub.`
             );
 
             setRenderProgress(100);

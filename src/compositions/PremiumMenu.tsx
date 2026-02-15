@@ -150,15 +150,25 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
         { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
     );
 
+    // Resolución de imagen inteligente
+    const imageSrc = useMemo(() => {
+        if (!item.image) return '';
+        if (item.image.startsWith('http') || item.image.startsWith('blob:')) {
+            return item.image;
+        }
+        // Limpiar el path si viene con 'public/' (común en el Dashboard)
+        const cleanPath = item.image.startsWith('public/')
+            ? item.image.replace('public/', '')
+            : item.image;
+
+        return staticFile(cleanPath);
+    }, [item.image]);
+
     return (
         <AbsoluteFill style={{ opacity }}>
             <div style={{ position: 'absolute', width: '100%', height: '100%', overflow: 'hidden' }}>
                 <Img
-                    src={
-                        item.image.startsWith('http') || item.image.startsWith('blob:')
-                            ? item.image
-                            : staticFile(item.image)
-                    }
+                    src={imageSrc}
                     style={{
                         width: '100%',
                         height: '100%',
