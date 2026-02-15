@@ -4,6 +4,8 @@ import { PremiumMenuDynamic, MenuItem, PremiumMenuProps } from './compositions/P
 import { MenuControls } from './components/MenuControls';
 import { Sparkles, Utensils, Share2, Download, Loader2 } from 'lucide-react';
 import { getMenuConfig } from './services/firebaseService';
+import { auth } from './services/firebaseConfig';
+import { signInAnonymously } from 'firebase/auth';
 
 const DEFAULT_MENU_ITEMS: MenuItem[] = [
     {
@@ -47,6 +49,14 @@ export const Editor: React.FC = () => {
     React.useEffect(() => {
         const loadConfig = async () => {
             try {
+                // 0. Autenticación Anónima (Para permisos de Firebase)
+                try {
+                    await signInAnonymously(auth);
+                    console.log('🔐 Autenticado anónimamente');
+                } catch (authError) {
+                    console.error('❌ Error de autenticación:', authError);
+                }
+
                 // 1. Primero cargar de LocalStorage (rápido y siempre disponible)
                 const saved = localStorage.getItem('menu_studio_config');
                 if (saved) {
