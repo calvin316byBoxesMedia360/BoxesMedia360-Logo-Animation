@@ -7,10 +7,10 @@ Este documento contiene todo el conocimiento técnico y operativo necesario para
 ## 🛠️ 1. Arquitectura del Sistema
 
 El sistema es una plataforma híbrida de edición de video en tiempo real:
-- **Frontend**: React + Vite (Dashboard).
+- **Frontend**: React + Vite (Dashboard Premium).
 - **Motor de Video**: Remotion (Live Preview & Render).
 - **Backend / Persistencia**: Firebase (Firestore, Storage, Auth).
-- **Renderizado Professional**: GitHub Actions (Generación de MP4 en la nube).
+- **Renderizado Profesional**: GitHub Actions (Generación de MP4 en la nube).
 
 ---
 
@@ -54,25 +54,33 @@ Para que las imágenes funcionen en el video final:
 
 ---
 
-## ☁️ 3. El Sistema de Renderizado (Paso a Paso)
+## ☁️ 3. El Nuevo Sistema de Exportación (V2)
 
-### El icono de la Nube Naranja (Cloud Sync)
-- **Significado**: La imagen es "Local". Solo tú la ves en tu navegador.
-- **Problema**: El servidor de renderizado NO puede ver tu disco duro.
-- **Solución**: Pulsa el botón de la cámara y vuelve a seleccionar la imagen. Cuando la nube naranja desaparezca, la imagen está en Firebase y lista para el video.
+### Sincronización Automática (Auto-Sync)
+- Ya no necesitas preocuparte por el **icono de la Nube Naranja**. Al pulsar "Exportar MP4", el sistema detecta automáticamente qué imágenes son locales y las sube a Firebase antes de iniciar el renderizado.
 
-### ¿Por qué falla el render?
-El 99% de los fallos en GitHub Actions son por:
-1. Imágenes locales (`blob:...`) que no se subieron a Firebase.
-2. Token de GitHub expirado en el archivo `.env`.
+### Bandeja de Salida (Export Tray)
+- Ubicada en la parte inferior del dashboard.
+- Muestra el progreso de tus videos en tiempo real.
+- **Estados**: `Queued` -> `Rendering` -> `Completed`.
+- Una vez listo, aparecerá un botón de **Descargar MP4**.
 
 ---
 
-## 💻 4. Guía de Desarrollo Local
+## 🛡️ 4. Resiliencia del Sistema (Armor Points)
+
+Hemos implementado "puntos de blindaje" para asegurar que el sistema nunca falle visualmente:
+1. **Auto-Tamaño de Texto**: Si el nombre de un platillo es muy largo, el sistema reduce la fuente automáticamente para que siempre quepa en el diseño.
+2. **Imágenes de Respaldo (Fallback)**: Si una imagen no carga o está rota, se muestra un asset de alta calidad de BoxesMedia por defecto.
+3. **Bloque de Renderizado**: Evita que se disparen múltiples renders accidentales mientras uno ya está en curso.
+
+---
+
+## 💻 5. Guía de Desarrollo Local
 
 ### Comandos Principales
 - `npm run dev`: Abre Remotion Studio (Visualización técnica del video).
-- `npm run dashboard`: Abre la aplicación principal de edición (Editor para el usuario).
+- `npm run dashboard`: Abre la aplicación principal de edición (Vite).
 
 ### Variables de Entorno (`.env`)
 Asegúrate de tener estas variables configuradas:
@@ -83,31 +91,18 @@ VITE_GITHUB_TOKEN=tu-github-token
 
 ---
 
-## 🚑 5. Solución de Problemas Comunes (FAQ)
+## 🚑 6. Solución de Problemas Comunes (FAQ)
 
-#### Q: "No se guardan los cambios cuando escribo"
-**A**: Revisa las pestañas de cada platillo. Ahora hay un botón **GUARDAR** que aparece al escribir. Debes pulsarlo para confirmar el cambio. También verifica que la base de datos de Firestore esté creada.
+#### Q: "El video en la Bandeja de Salida dice 'Failed'"
+**A**: Generalmente se debe a una pérdida de conexión durante la subida de imágenes o a que los límites de GitHub Actions se han alcanzado. Reintenta la exportación en 5 minutos.
 
 #### Q: "Error 0x80070323 al abrir el video en Windows"
-**A**: Windows Media Player intenta abrir el video antes de que termine de descargarse o mientras el navegador lo tiene bloqueado. **Solución**: Abre el archivo con **VLC Media Player** o espera 10 segundos.
+**A**: Windows Media Player es impaciente. Espera a que la descarga termine al 100% o usa **VLC Media Player**.
 
 #### Q: "Sale un Error Unauthorized al subir imagen"
 **A**: Tus reglas de Firebase Storage están bloqueando el acceso. Ve a la consola de Firebase y asegúrate de que el `allow write: if true;` esté activo y **Publicado**.
 
-#### Q: "El video no hace bucle (loop)"
-**A**: Los archivos de video (`.mp4`) no saben que deben repetirse solos. Es función del reproductor de TV o computadora activar el modo "Repetir". Te recomendamos usar VLC en modo Loop.
-
----
-
-## 📝 6. Contrato de Sincronización
-
-Cada vez que el sistema se inicia, realiza esta cadena:
-1. **Auth**: Se loguea anónimamente para obtener un UID.
-2. **Local Load**: Carga los datos guardados en el navegador (Rápido).
-3. **Cloud Sync**: Busca en Firestore si hay una versión más nueva bajo tu UID.
-4. **Push Update**: Al pulsar el botón "Sync Cloud" superior, se fuerza el guardado de TODO en la nube.
-
 ---
 
 **Última revisión completa**: 15 de Febrero, 2026.
-**Estado del sistema**: Operativo y Sincronizado.
+**Estado del sistema**: Operativo, Resiliente y Sincronizado.

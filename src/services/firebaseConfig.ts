@@ -4,12 +4,12 @@ import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-    projectId: "digitalmenu-db",
-    appId: "1:991749881933:web:425665a8c1be2cdc0a5c04",
-    storageBucket: "digitalmenu-db.firebasestorage.app",
-    apiKey: "AIzaSyCU0F1YaPj_wCIsnIuQKCaCLrqVvsOQaoc",
-    authDomain: "digitalmenu-db.firebaseapp.com",
-    messagingSenderId: "991749881933",
+    projectId: "boxesos-crmtest",
+    appId: "1:938762407896:web:bbf03de149edb26bcb6cad",
+    storageBucket: "boxesos-crmtest.firebasestorage.app",
+    apiKey: "AIzaSyASiL3PIBovXTxrv9k5Ga8n4gtlu6EW2Cs",
+    authDomain: "boxesos-crmtest.firebaseapp.com",
+    messagingSenderId: "938762407896",
 };
 
 // Initialize Firebase

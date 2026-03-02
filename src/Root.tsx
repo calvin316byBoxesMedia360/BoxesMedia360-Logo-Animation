@@ -17,21 +17,49 @@ const sampleMenuData: PremiumMenuProps = {
   ],
   restaurantName: 'Los Cuates',
   accentColor: '#D4AF37',
-  sceneDuration: 120,
+  sceneDuration: 4.0, // Ahora en segundos
 };
 
 // Función para calcular duración basada en props
 const calculateMenuDuration = (props: PremiumMenuProps) => {
-  const sceneDuration = props.sceneDuration || 120;
   const transitionFrames = 25;
-  const itemCount = props.menuItems?.length || 4;
 
-  if (props.isSeamlessLoop) {
-    // En modo seamless, terminamos justo cuando la transición al primer ítem duplicado llega a ser opaca
-    return Math.max(itemCount * (sceneDuration - transitionFrames), 1);
-  }
+  // Salvaguarda: si sceneDuration > 100, es probable que se guardó en frames accidentalmente
+  let sceneDurationSec = props.sceneDuration || 4.0;
+  if (sceneDurationSec > 100) sceneDurationSec = sceneDurationSec / 30;
 
-  return Math.max(itemCount * (sceneDuration - transitionFrames) + transitionFrames, 1);
+  const sceneDurationFrames = Math.round(sceneDurationSec * 30);
+
+  const safeItems = props.menuItems && props.menuItems.length > 0
+    ? props.menuItems
+    : sampleMenuData.menuItems;
+
+  const itemsToRender = props.isSeamlessLoop ? [...safeItems, safeItems[0]] : safeItems;
+
+  let totalFrames = 0;
+  itemsToRender.forEach((item, index) => {
+    // Lo mismo para duraciones individuales
+    let itemDurSec = item.duration;
+    if (itemDurSec && itemDurSec > 100) itemDurSec = itemDurSec / 30;
+
+    let itemDurationFrames = itemDurSec
+      ? Math.round(itemDurSec * 30)
+      : sceneDurationFrames;
+
+    // Si es el último item y es un loop sin fin, solo lo necesitamos 
+    // lo suficiente para que termine la transición (fadeIn del primero)
+    if (props.isSeamlessLoop && index === itemsToRender.length - 1) {
+      itemDurationFrames = transitionFrames;
+    }
+
+    const offset = (index === itemsToRender.length - 1)
+      ? 0
+      : transitionFrames;
+
+    totalFrames += (itemDurationFrames - offset);
+  });
+
+  return Math.max(totalFrames, 1);
 };
 
 export const RemotionRoot: React.FC = () => {

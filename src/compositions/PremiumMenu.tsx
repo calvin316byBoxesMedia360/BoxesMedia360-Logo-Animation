@@ -1,14 +1,18 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing, Img, staticFile, Sequence } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing, Img, Video, staticFile, Sequence } from 'remotion';
 import React, { useMemo, useState } from 'react';
 
 // ============================================
 // 📋 TIPOS - DEFINICIÓN DE PROPS
 // ============================================
 export interface MenuItem {
-    image: string;
+    image: string; // URL o path
+    mediaType?: 'image' | 'video'; // Tipo de media
+    duration?: number; // Duración específica en segundos (opcional)
     name: string;
     description: string;
     price: string;
+    fontSizeMode?: 'normal' | 'medium' | 'large';
+    uploadError?: boolean;
 }
 
 export interface PremiumMenuProps {
@@ -89,47 +93,78 @@ interface DishSceneProps {
     item: MenuItem;
     sceneDuration: number;
     accentColor: string;
+    sceneIndex?: number;
+    isSeamlessLoop?: boolean;
+    isLastScene?: boolean;
 }
 
-const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor }) => {
+const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor, sceneIndex = 0, isSeamlessLoop = false, isLastScene = false }) => {
     const frame = useCurrentFrame();
     const [imgError, setImgError] = useState(false);
 
-    // Ken Burns
-    const scale = interpolate(frame, [0, sceneDuration], [1, 1.12], {
+    // Detección automática de mediaType si falta (basado en extensión)
+    const mediaType = useMemo(() => {
+        if (item.mediaType) return item.mediaType;
+        const isVideo = item.image.toLowerCase().split('?')[0].endsWith('.mp4') ||
+            item.image.toLowerCase().split('?')[0].endsWith('.webm') ||
+            item.image.includes('video');
+        return isVideo ? 'video' : 'image';
+    }, [item.mediaType, item.image]);
+
+    // Ken Burns - Ajustado a la duración real de la escena
+    // Si es la escena "ancla" del loop (la última de la secuencia duplicada), 
+    // la fijamos en scale 1 para que coincida perfectamente con el inicio del video
+    const scale = (isSeamlessLoop && isLastScene) ? 1 : interpolate(frame, [0, sceneDuration], [1, 1.12], {
         easing: Easing.out(Easing.quad),
+        extrapolateRight: 'clamp'
     });
 
-    const translateX = interpolate(frame, [0, sceneDuration], [0, -15], {
+    const translateX = (isSeamlessLoop && isLastScene) ? 0 : interpolate(frame, [0, sceneDuration], [0, -15], {
         easing: Easing.inOut(Easing.quad),
+        extrapolateRight: 'clamp'
     });
 
-    // Fade
-    const fadeIn = interpolate(frame, [0, TRANSITION_FRAMES], [0, 1], {
+    // Fade - Usando TRANSITION_FRAMES constantes
+    // Si es un loop sin fin y es la primera escena, empezamos en opacidad 1 (ya visible)
+    const startFadeIn = (isSeamlessLoop && sceneIndex === 0) ? 1 : 0;
+
+    const fadeIn = interpolate(frame, [0, TRANSITION_FRAMES], [startFadeIn, 1], {
         extrapolateRight: 'clamp',
         easing: Easing.out(Easing.cubic),
     });
 
+    const endFadeOut = (isSeamlessLoop && isLastScene) ? 1 : 0;
+
     const fadeOut = interpolate(
         frame,
         [sceneDuration - TRANSITION_FRAMES, sceneDuration],
-        [1, 0],
-        { extrapolateLeft: 'clamp', easing: Easing.in(Easing.cubic) }
+        [1, endFadeOut],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.in(Easing.cubic) }
     );
 
     const opacity = Math.min(fadeIn, fadeOut);
 
-    // BLINDAJE 1: Auto-FontSize dinámico basado en longitud de caracteres
-    const getNameFontSize = (text: string) => {
-        if (text.length > 30) return 48;
-        if (text.length > 20) return 60;
-        return 72;
+    // BLINDAJE 1: Auto-FontSize dinámico + Multiplicador manual (Más agresivo)
+    const getTextMultiplier = (mode?: string) => {
+        if (mode === 'medium') return 1.4;
+        if (mode === 'large') return 1.8;
+        return 1.0;
     };
 
-    const getDescFontSize = (text: string) => {
-        if (text.length > 80) return 20;
-        if (text.length > 50) return 24;
-        return 28;
+    const getNameFontSize = (text: string, mode?: string) => {
+        const multiplier = getTextMultiplier(mode);
+        let baseSize = 72;
+        if (text.length > 30) baseSize = 48;
+        else if (text.length > 20) baseSize = 60;
+        return baseSize * multiplier;
+    };
+
+    const getDescFontSize = (text: string, mode?: string) => {
+        const multiplier = getTextMultiplier(mode);
+        let baseSize = 28;
+        if (text.length > 80) baseSize = 20;
+        else if (text.length > 50) baseSize = 24;
+        return baseSize * multiplier;
     };
 
     // Text animation
@@ -168,8 +203,8 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
         { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
     );
 
-    // Resolución de imagen inteligente con fallback
-    const imageSrc = useMemo(() => {
+    // Resolución de imagen/video inteligente con fallback
+    const mediaSrc = useMemo(() => {
         if (imgError) return FALLBACK_IMAGE;
         if (!item.image) return FALLBACK_IMAGE;
 
@@ -184,19 +219,36 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
         return staticFile(cleanPath);
     }, [item.image, imgError]);
 
+    const isVideo = mediaType === 'video';
+
     return (
         <AbsoluteFill style={{ opacity }}>
             <div style={{ position: 'absolute', width: '100%', height: '100%', overflow: 'hidden' }}>
-                <Img
-                    src={imageSrc}
-                    onError={() => setImgError(true)}
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        transform: `scale(${scale}) translateX(${translateX}px)`,
-                    }}
-                />
+                {isVideo ? (
+                    <Video
+                        src={mediaSrc}
+                        onError={() => setImgError(true)}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            transform: `scale(${scale}) translateX(${translateX}px)`,
+                        }}
+                        muted
+                        loop
+                    />
+                ) : (
+                    <Img
+                        src={mediaSrc}
+                        onError={() => setImgError(true)}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            transform: `scale(${scale}) translateX(${translateX}px)`,
+                        }}
+                    />
+                )}
 
                 <div
                     style={{
@@ -231,7 +283,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
                 <h1
                     style={{
                         fontFamily: '"Playfair Display", Georgia, serif',
-                        fontSize: getNameFontSize(item.name),
+                        fontSize: getNameFontSize(item.name, item.fontSizeMode),
                         fontWeight: 900,
                         color: DEFAULT_COLORS.cream,
                         margin: 0,
@@ -240,7 +292,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
                         transform: `translateY(${nameY}px)`,
                         letterSpacing: '-0.02em',
                         lineHeight: 1.1,
-                        maxWidth: '80%'
+                        maxWidth: '90%'
                     }}
                 >
                     {item.name}
@@ -249,7 +301,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
                 <p
                     style={{
                         fontFamily: '"Lato", Arial, sans-serif',
-                        fontSize: getDescFontSize(item.description),
+                        fontSize: getDescFontSize(item.description, item.fontSizeMode),
                         fontWeight: 400,
                         color: DEFAULT_COLORS.cream,
                         margin: '20px 0 0 0',
@@ -257,7 +309,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
                         opacity: descOpacity,
                         letterSpacing: '0.05em',
                         lineHeight: 1.4,
-                        maxWidth: '70%',
+                        maxWidth: '80%',
                         fontStyle: 'italic'
                     }}
                 >
@@ -282,7 +334,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor 
                         <span
                             style={{
                                 fontFamily: '"Playfair Display", Georgia, serif',
-                                fontSize: 48,
+                                fontSize: 48 * getTextMultiplier(item.fontSizeMode),
                                 fontWeight: 900,
                                 color: accentColor,
                                 textShadow: `0 0 15px ${accentColor}80`,
@@ -338,10 +390,13 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     menuItems = DEFAULT_MENU_ITEMS,
     restaurantName = 'Los Cuates',
     accentColor = DEFAULT_COLORS.gold,
-    sceneDuration = 120,
+    sceneDuration = 4.0, // Ahora en segundos
     isSeamlessLoop = false,
     logoUri,
 }) => {
+    // Convertir segundos a frames para la lógica interna
+    const sceneDurationFrames = Math.round(sceneDuration * 30);
+
     // BLINDAJE 3: Fallback para menú vacío (Evita crash de Remotion)
     const safeMenuItems = useMemo(() => {
         if (!menuItems || menuItems.length === 0) {
@@ -362,20 +417,54 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
         return safeMenuItems;
     }, [safeMenuItems, isSeamlessLoop]);
 
+    // Calcular frames acumulados para duraciones dinámicas
+    const itemsWithSequences = useMemo(() => {
+        let currentFrame = 0;
+        return itemsToRender.map((item, index) => {
+            let itemDurationFrames = item.duration
+                ? Math.round(item.duration * 30)
+                : sceneDurationFrames;
+
+            // Si es el último item y es un loop sin fin, solo lo necesitamos 
+            // lo suficiente para que termine la transición (fadeIn del primero)
+            if (isSeamlessLoop && index === itemsToRender.length - 1) {
+                itemDurationFrames = TRANSITION_FRAMES;
+            }
+
+            const startFrame = currentFrame;
+
+            const offset = (index === itemsToRender.length - 1)
+                ? 0
+                : TRANSITION_FRAMES;
+
+            currentFrame += (itemDurationFrames - offset);
+
+            return {
+                ...item,
+                startFrame,
+                durationFrames: itemDurationFrames,
+                sceneIndex: index
+            };
+        });
+    }, [itemsToRender, sceneDurationFrames, isSeamlessLoop]);
+
     return (
         <AbsoluteFill style={{ backgroundColor: DEFAULT_COLORS.dark }}>
             <GoldenParticles color={accentColor} />
 
-            {itemsToRender.map((item, index) => (
+            {itemsWithSequences.map((item, index) => (
                 <Sequence
                     key={`${index}-${item.name}-${index}`}
-                    from={index * (sceneDuration - TRANSITION_FRAMES)}
-                    durationInFrames={sceneDuration}
+                    from={item.startFrame}
+                    durationInFrames={item.durationFrames}
                 >
                     <DishScene
                         item={item}
-                        sceneDuration={sceneDuration}
+                        sceneDuration={item.durationFrames}
                         accentColor={accentColor}
+                        sceneIndex={item.sceneIndex}
+                        isSeamlessLoop={isSeamlessLoop}
+                        isLastScene={index === itemsWithSequences.length - 1}
                     />
                 </Sequence>
             ))}

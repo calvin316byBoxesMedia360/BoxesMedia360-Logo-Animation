@@ -6,7 +6,6 @@ import {
     getDocs,
     query,
     where,
-    orderBy,
     serverTimestamp,
     addDoc
 } from 'firebase/firestore';
@@ -121,14 +120,20 @@ export async function listUserExports(userId: string) {
     try {
         const q = query(
             collection(db, 'exports'),
-            where('userId', '==', userId),
-            orderBy('createdAt', 'desc')
+            where('userId', '==', userId)
         );
         const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => ({
+        const results = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
-        }));
+        })) as any[];
+
+        // Sort on client side to avoid missing index error
+        return results.sort((a, b) => {
+            const dateA = a.createdAt?.toMillis?.() || 0;
+            const dateB = b.createdAt?.toMillis?.() || 0;
+            return dateB - dateA;
+        });
     } catch (error) {
         console.error('❌ Error listando exportaciones:', error);
         return [];
