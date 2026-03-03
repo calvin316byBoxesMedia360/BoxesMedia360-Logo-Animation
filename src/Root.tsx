@@ -20,30 +20,41 @@ const sampleMenuData: PremiumMenuProps = {
   sceneDuration: 4.0, // Ahora en segundos
 };
 
-// Función para calcular duración basada en props
+// Función para calcular duración basada en props con mayor robustez
 const calculateMenuDuration = (props: PremiumMenuProps) => {
   const transitionFrames = 25;
+  const FPS = 30;
+
+  console.log('--- Calculando Duración del Menú ---');
+  console.log('Props recibidas:', JSON.stringify({
+    restaurantName: props.restaurantName,
+    itemsCount: props.menuItems?.length,
+    sceneDuration: props.sceneDuration,
+    isSeamlessLoop: props.isSeamlessLoop
+  }));
 
   // Salvaguarda: si sceneDuration > 100, es probable que se guardó en frames accidentalmente
   let sceneDurationSec = props.sceneDuration || 4.0;
-  if (sceneDurationSec > 100) sceneDurationSec = sceneDurationSec / 30;
+  if (sceneDurationSec > 100) sceneDurationSec = sceneDurationSec / FPS;
+  // Mínimo absoluto para evitar números negativos en la resta del gap
+  sceneDurationSec = Math.max(sceneDurationSec, 1.0);
 
-  const sceneDurationFrames = Math.round(sceneDurationSec * 30);
+  const sceneDurationFrames = Math.round(sceneDurationSec * FPS);
 
   const safeItems = props.menuItems && props.menuItems.length > 0
     ? props.menuItems
     : sampleMenuData.menuItems;
 
   const itemsToRender = props.isSeamlessLoop ? [...safeItems, safeItems[0]] : safeItems;
+  console.log(`Analizando ${itemsToRender.length} escenas (Seamless: ${props.isSeamlessLoop ? 'SI' : 'NO'})`);
 
   let totalFrames = 0;
   itemsToRender.forEach((item, index) => {
-    // Lo mismo para duraciones individuales
     let itemDurSec = item.duration;
-    if (itemDurSec && itemDurSec > 100) itemDurSec = itemDurSec / 30;
+    if (itemDurSec && itemDurSec > 100) itemDurSec = itemDurSec / FPS;
 
     let itemDurationFrames = itemDurSec
-      ? Math.round(itemDurSec * 30)
+      ? Math.round(itemDurSec * FPS)
       : sceneDurationFrames;
 
     // Si es el último item y es un loop sin fin, solo lo necesitamos 
@@ -52,14 +63,22 @@ const calculateMenuDuration = (props: PremiumMenuProps) => {
       itemDurationFrames = transitionFrames;
     }
 
-    const offset = (index === itemsToRender.length - 1)
-      ? 0
-      : transitionFrames;
+    // El offset es lo que "robamos" del siguiente para el fade
+    const isLast = (index === itemsToRender.length - 1);
+    const offset = isLast ? 0 : transitionFrames;
 
-    totalFrames += (itemDurationFrames - offset);
+    // Aseguramos que el item dure al menos un poco más que la transición
+    const effectiveDuration = Math.max(itemDurationFrames - offset, 1);
+    totalFrames += effectiveDuration;
+
+    console.log(`Escena ${index}: dur=${itemDurationFrames}, offset=${offset}, acumulado=${totalFrames}`);
   });
 
-  return Math.max(totalFrames, 1);
+  const finalDuration = Math.max(totalFrames, 30); // Al menos 1 segundo
+  console.log(`Duración final calculada: ${finalDuration} frames (${(finalDuration / FPS).toFixed(2)}s)`);
+  console.log('-----------------------------------');
+
+  return finalDuration;
 };
 
 export const RemotionRoot: React.FC = () => {
