@@ -25,12 +25,15 @@ const calculateMenuDuration = (props: PremiumMenuProps) => {
   const transitionFrames = 25;
   const FPS = 30;
 
+  // Asegurar que los booleanos que llegan por CLI sean booleanos reales
+  const isSeamlessLoop = props.isSeamlessLoop === true || props.isSeamlessLoop === 'true';
+
   console.log('--- Calculando Duración del Menú ---');
   console.log('Props recibidas:', JSON.stringify({
     restaurantName: props.restaurantName,
     itemsCount: props.menuItems?.length,
     sceneDuration: props.sceneDuration,
-    isSeamlessLoop: props.isSeamlessLoop
+    isSeamlessLoop: isSeamlessLoop
   }));
 
   // Salvaguarda: si sceneDuration > 100, es probable que se guardó en frames accidentalmente
@@ -45,8 +48,8 @@ const calculateMenuDuration = (props: PremiumMenuProps) => {
     ? props.menuItems
     : sampleMenuData.menuItems;
 
-  const itemsToRender = props.isSeamlessLoop ? [...safeItems, safeItems[0]] : safeItems;
-  console.log(`Analizando ${itemsToRender.length} escenas (Seamless: ${props.isSeamlessLoop ? 'SI' : 'NO'})`);
+  const itemsToRender = isSeamlessLoop ? [...safeItems, safeItems[0]] : safeItems;
+  console.log(`Analizando ${itemsToRender.length} escenas (Seamless: ${isSeamlessLoop ? 'SI' : 'NO'})`);
 
   let totalFrames = 0;
   itemsToRender.forEach((item, index) => {
@@ -59,7 +62,7 @@ const calculateMenuDuration = (props: PremiumMenuProps) => {
 
     // Si es el último item y es un loop sin fin, solo lo necesitamos 
     // lo suficiente para que termine la transición (fadeIn del primero)
-    if (props.isSeamlessLoop && index === itemsToRender.length - 1) {
+    if (isSeamlessLoop && index === itemsToRender.length - 1) {
       itemDurationFrames = transitionFrames;
     }
 

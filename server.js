@@ -9,8 +9,8 @@ const { renderVideo } = require('./scripts/render-video');
 // Nota: Se usará la configuración por defecto (Application Default Credentials)
 // Si encuentras errores de permisos, asegúrate de estar logueado o proveer un Service Account
 const firebaseApp = admin.initializeApp({
-    projectId: "digitalmenu-db",
-    storageBucket: "digitalmenu-db.firebasestorage.app"
+    projectId: "boxesos-crmtest",
+    storageBucket: "boxesos-crmtest.firebasestorage.app"
 });
 
 const db = admin.firestore();
@@ -19,8 +19,8 @@ const bucket = admin.storage().bucket();
 const app = express();
 const PORT = process.env.PORT || 3003;
 
-// Middleware
-app.use(cors());
+// Middleware — allow all origins (required for Firebase Hosting → Cloud Run)
+app.use(cors({ origin: true }));
 app.use(express.json());
 
 // Servir archivos estáticos de la carpeta out
@@ -57,8 +57,12 @@ async function uploadToFirebase(filePath, destination, metadata) {
  * Renderiza un video MP4 y lo sube a Firebase Storage
  */
 app.post('/api/render', async (req, res) => {
-    const menuConfig = req.body;
-    const userId = menuConfig.userId || 'anonymous';
+    // Frontend sends: { projectId, menuConfig, quality }
+    // Extract menuConfig properly — fallback to entire body for backwards compat
+    const body = req.body;
+    const menuConfig = body.menuConfig || body;
+    const projectId = body.projectId || `export-${Date.now()}`;
+    const userId = menuConfig.userId || menuConfig._userId || 'anonymous';
 
     console.log('\n🎬 Nueva solicitud de renderizado recibida');
     console.log(`   Usuario: ${userId}`);
@@ -78,21 +82,22 @@ app.post('/api/render', async (req, res) => {
 
         // 3. Registrar en Firestore
         await db.collection('exports').add({
-            userId,
-            restaurantName: menuConfig.restaurantName,
-            filename: result.filename,
-            url: cloudUrl,
+            userId: userId || null,
+            projectId: projectId || null,
+            restaurantName: menuConfig.restaurantName || menuConfig.name || null,
+            filename: result.filename || null,
+            url: cloudUrl || null,
             status: 'completed',
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            config: menuConfig // Guardar la config para poder re-renderizar si es necesario
         });
 
         res.json({
             success: true,
             message: 'Video renderizado y subido exitosamente',
-            downloadUrl: cloudUrl, // Retornamos la URL de la nube directamente
+            videoUrl: cloudUrl,
+            downloadUrl: cloudUrl,
             filename: result.filename,
-            localPath: result.outputPath,
+            renderId: projectId,
         });
 
     } catch (error) {
@@ -100,7 +105,8 @@ app.post('/api/render', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al procesar el video',
-            error: error.message,
+            error: error.message || String(error),
+            stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
         });
     }
 });

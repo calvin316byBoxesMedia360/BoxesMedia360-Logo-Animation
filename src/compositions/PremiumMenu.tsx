@@ -13,6 +13,7 @@ export interface MenuItem {
     price: string;
     fontSizeMode?: 'normal' | 'medium' | 'large';
     uploadError?: boolean;
+    showCurrencySymbol?: boolean; // Mostrar/ocultar símbolo $ en el video
 }
 
 export interface PremiumMenuProps {
@@ -46,43 +47,61 @@ const GoldenParticles: React.FC<{ color?: string }> = ({ color = DEFAULT_COLORS.
     const { durationInFrames } = useVideoConfig();
 
     const particles = useMemo(() => {
-        return Array.from({ length: 25 }, (_, i) => ({
+        return Array.from({ length: 40 }, (_, i) => ({
             id: i,
             x: Math.random() * 100,
             y: Math.random() * 100,
-            size: Math.random() * 3 + 1,
-            delay: Math.random() * 200,
+            size: Math.random() * 2 + 0.5,
+            speed: Math.random() * 0.5 + 0.2,
+            drift: Math.random() * 2 - 1,
+            delay: Math.random() * 1000,
         }));
     }, []);
 
-    const cycleProgress = (frame % durationInFrames) / durationInFrames;
-    const angle = cycleProgress * Math.PI * 2;
-
     return (
-        <>
+        <AbsoluteFill style={{ pointerEvents: 'none' }}>
             {particles.map((p) => {
-                const floatY = p.y + Math.sin(angle + p.delay * 0.01) * 3;
-                const floatX = p.x + Math.cos(angle + p.delay * 0.01) * 2;
-                const opacity = 0.3 + Math.sin(angle + p.delay * 0.02) * 0.2;
+                const speedMult = p.speed;
+                const moveY = (frame * speedMult) % 100;
+                const floatX = Math.sin((frame + p.delay) * 0.02) * 2;
+                const opacity = 0.2 + Math.sin((frame + p.delay) * 0.05) * 0.15;
 
                 return (
                     <div
                         key={p.id}
                         style={{
                             position: 'absolute',
-                            left: `${floatX}%`,
-                            top: `${floatY}%`,
+                            left: `${(p.x + floatX) % 100}%`,
+                            top: `${(p.y - moveY + 100) % 100}%`,
                             width: p.size,
                             height: p.size,
                             borderRadius: '50%',
                             backgroundColor: color,
                             opacity,
-                            boxShadow: `0 0 ${p.size * 2}px ${color}`,
+                            boxShadow: `0 0 ${p.size * 3}px ${color}`,
+                            filter: 'blur(0.5px)',
                         }}
                     />
                 );
             })}
-        </>
+        </AbsoluteFill>
+    );
+};
+
+// ============================================
+// 🎞️ EFECTO DE GRANO DE PELÍCULA
+// ============================================
+const FilmGrain: React.FC = () => {
+    return (
+        <AbsoluteFill style={{ pointerEvents: 'none', opacity: 0.04, mixBlendMode: 'overlay' }}>
+            <svg width="100%" height="100%">
+                <filter id="grainy">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+                    <feColorMatrix type="saturate" values="0" />
+                </filter>
+                <rect width="100%" height="100%" filter="url(#grainy)" />
+            </svg>
+        </AbsoluteFill>
     );
 };
 
@@ -111,18 +130,37 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
         return isVideo ? 'video' : 'image';
     }, [item.mediaType, item.image]);
 
-    // Ken Burns - Ajustado a la duración real de la escena
-    // Si es la escena "ancla" del loop (la última de la secuencia duplicada), 
-    // la fijamos en scale 1 para que coincida perfectamente con el inicio del video
-    const scale = (isSeamlessLoop && isLastScene) ? 1 : interpolate(frame, [0, sceneDuration], [1, 1.12], {
-        easing: Easing.out(Easing.quad),
-        extrapolateRight: 'clamp'
-    });
+    // Modos de movimiento automáticos para variedad cinemática
+    const moveType = useMemo(() => {
+        const types: ('zoom-in' | 'zoom-out' | 'pan-vertical')[] = ['zoom-in', 'zoom-out', 'pan-vertical'];
+        return types[sceneIndex % types.length];
+    }, [sceneIndex]);
 
-    const translateX = (isSeamlessLoop && isLastScene) ? 0 : interpolate(frame, [0, sceneDuration], [0, -15], {
-        easing: Easing.inOut(Easing.quad),
-        extrapolateRight: 'clamp'
-    });
+
+    // Ken Burns Dinámico - Automático
+    const scale = useMemo(() => {
+        if (isSeamlessLoop && isLastScene) return 1;
+        if (mediaType === 'video') return 1; // Sin zoom en videos
+
+        if (moveType === 'zoom-in') {
+            return interpolate(frame, [0, sceneDuration], [1, 1.15], { easing: Easing.out(Easing.quad), extrapolateRight: 'clamp' });
+        }
+        if (moveType === 'zoom-out') {
+            return interpolate(frame, [0, sceneDuration], [1.15, 1], { easing: Easing.out(Easing.quad), extrapolateRight: 'clamp' });
+        }
+        return 1.1; // Base para paneo vertical
+    }, [frame, sceneDuration, moveType, isSeamlessLoop, isLastScene, mediaType]);
+
+    const translateY = useMemo(() => {
+        if (isSeamlessLoop && isLastScene) return 0;
+        if (mediaType === 'video' || moveType !== 'pan-vertical') return 0;
+
+        return interpolate(frame, [0, sceneDuration], [-30, 30], { easing: Easing.inOut(Easing.quad), extrapolateRight: 'clamp' });
+    }, [frame, sceneDuration, moveType, isSeamlessLoop, isLastScene, mediaType]);
+
+    const translateX = useMemo(() => {
+        return 0; // Simplificamos para no marear al usuario
+    }, []);
 
     // Fade - Usando TRANSITION_FRAMES constantes
     // Si es un loop sin fin y es la primera escena, empezamos en opacidad 1 (ya visible)
@@ -232,7 +270,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover',
-                            transform: `scale(${scale}) translateX(${translateX}px)`,
+                            transform: `scale(${scale}) translateY(${translateY}px)`,
                         }}
                         muted
                         loop
@@ -245,7 +283,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover',
-                            transform: `scale(${scale}) translateX(${translateX}px)`,
+                            transform: `scale(${scale}) translateY(${translateY}px)`,
                         }}
                     />
                 )}
@@ -255,9 +293,18 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                         position: 'absolute',
                         inset: 0,
                         background: `
-              radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%),
-              linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.7) 100%)
+              radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%),
+              linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8) 100%)
             `,
+                    }}
+                />
+
+                {/* Vignette Profundo */}
+                <div
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        boxShadow: 'inset 0 0 200px rgba(0,0,0,0.7)',
                     }}
                 />
 
@@ -341,7 +388,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                                 letterSpacing: '0.02em',
                             }}
                         >
-                            {item.price}
+                            {(item.showCurrencySymbol !== false) ? item.price : item.price.replace(/[^\d.,]/g, '').trim()}
                         </span>
                     </div>
                 </div>
@@ -391,9 +438,12 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     restaurantName = 'Los Cuates',
     accentColor = DEFAULT_COLORS.gold,
     sceneDuration = 4.0, // Ahora en segundos
-    isSeamlessLoop = false,
+    isSeamlessLoop: isSeamlessLoopProp = false,
     logoUri,
 }) => {
+    // Asegurar booleano real (parche para CLI de Remotion)
+    const isSeamlessLoop = isSeamlessLoopProp === true || (isSeamlessLoopProp as unknown) === 'true';
+
     // Convertir segundos a frames para la lógica interna
     const sceneDurationFrames = Math.round(sceneDuration * 30);
 
@@ -425,6 +475,9 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
                 ? Math.round(item.duration * 30)
                 : sceneDurationFrames;
 
+            // Asegurar duración mínima
+            itemDurationFrames = Math.max(itemDurationFrames, 30);
+
             // Si es el último item y es un loop sin fin, solo lo necesitamos 
             // lo suficiente para que termine la transición (fadeIn del primero)
             if (isSeamlessLoop && index === itemsToRender.length - 1) {
@@ -433,11 +486,11 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
 
             const startFrame = currentFrame;
 
-            const offset = (index === itemsToRender.length - 1)
-                ? 0
-                : TRANSITION_FRAMES;
+            const isLast = (index === itemsToRender.length - 1);
+            const offset = isLast ? 0 : TRANSITION_FRAMES;
 
-            currentFrame += (itemDurationFrames - offset);
+            const effectiveDuration = Math.max(itemDurationFrames - offset, 1);
+            currentFrame += effectiveDuration;
 
             return {
                 ...item,
@@ -450,6 +503,7 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
 
     return (
         <AbsoluteFill style={{ backgroundColor: DEFAULT_COLORS.dark }}>
+            <FilmGrain />
             <GoldenParticles color={accentColor} />
 
             {itemsWithSequences.map((item, index) => (
@@ -484,15 +538,6 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
                     </div>
                 </AbsoluteFill>
             )}
-
-            <div
-                style={{
-                    position: 'absolute',
-                    inset: 0,
-                    boxShadow: 'inset 0 0 150px rgba(0,0,0,0.4)',
-                    pointerEvents: 'none',
-                }}
-            />
         </AbsoluteFill>
     );
 };

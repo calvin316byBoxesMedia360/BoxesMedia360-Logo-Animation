@@ -9,6 +9,15 @@ const fs = require('fs');
  */
 
 async function renderVideo(menuConfig) {
+    // BYPASS PARA ARM64 - Truco para engañar a Remotion y usar Edge nativo
+    try {
+        Object.defineProperty(process, 'arch', { value: 'x64' });
+    } catch (e) { }
+    const browserPath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+    if (fs.existsSync(browserPath)) {
+        process.env.REMOTION_CHROME_EXECUTABLE_PATH = browserPath;
+    }
+
     console.log('🎬 Iniciando renderizado de video...\n');
 
     try {
@@ -24,7 +33,7 @@ async function renderVideo(menuConfig) {
         console.log('🎯 Paso 2/3: Seleccionando composición...');
         const composition = await selectComposition({
             serveUrl: bundleLocation,
-            id: 'PremiumMenu',
+            id: 'PremiumMenuDynamic',
             inputProps: menuConfig,
         });
         console.log(`✅ Composición seleccionada: ${composition.width}x${composition.height}, ${composition.durationInFrames} frames\n`);
@@ -40,6 +49,11 @@ async function renderVideo(menuConfig) {
             codec: 'h264',
             outputLocation,
             inputProps: menuConfig,
+            browserExecutable: fs.existsSync(browserPath) ? browserPath : (process.env.REMOTION_PUPPETEER_EXECUTABLE_PATH || null),
+            chromiumOptions: {
+                headless: 'shell',
+                args: ['--headless=new', '--no-sandbox', '--disable-setuid-sandbox'],
+            },
             onProgress: ({ renderedFrames, encodedFrames, totalFrames }) => {
                 const progress = Math.round((renderedFrames / totalFrames) * 100);
                 process.stdout.write(`\r   Progreso: ${progress}% (${renderedFrames}/${totalFrames} frames)`);

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PremiumMenuProps, MenuItem } from '../compositions/PremiumMenu';
 import { saveMenuConfig, uploadMenuItemImage } from '../services/firebaseService';
-import { refineCopy } from '../services/aiService';
-import { triggerRenderWorkflow } from '../services/githubActionsService';
+import { renderWithCloudRun } from '../services/cloudRunService';
 import { auth } from '../services/firebaseConfig';
 import {
     Palette,
@@ -20,9 +19,10 @@ import {
     CheckCircle2,
     AlertCircle,
     User,
-    Lock,
     Film,
-    Infinity
+    Infinity,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 
 interface MenuControlsProps {
@@ -151,6 +151,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
                             <button
                                 onClick={toggleFontSize}
                                 className={`w-7 h-7 lg:w-8 lg:h-8 rounded-lg lg:rounded-xl flex items-center justify-center text-[10px] font-black transition-all border ${item.fontSizeMode && item.fontSizeMode !== 'normal' ? 'bg-amber-500 text-black border-amber-400' : 'bg-white/5 text-white/40 border-white/10'}`}
+                                title="Tamaño de texto"
                             >
                                 {getModeLabel()}
                             </button>
@@ -166,13 +167,27 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
                         placeholder="Descripción..."
                     />
                     <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5 focus-within:border-amber-500/50 transition-all">
-                            <span className="text-xs font-bold text-amber-500">$</span>
+                        <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/5 rounded-xl border border-white/5 focus-within:border-amber-500/50 transition-all">
+                            <button
+                                type="button"
+                                onClick={() => onUpdate(index, { showCurrencySymbol: item.showCurrencySymbol === false ? true : false })}
+                                title={item.showCurrencySymbol === false ? 'S\u00edmbolo oculto — clic para mostrar' : 'S\u00edmbolo visible — clic para ocultar'}
+                                className={`flex shrink-0 items-center justify-center p-1.5 rounded-lg transition-all ${
+                                    item.showCurrencySymbol === false
+                                        ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'
+                                        : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                                }`}
+                            >
+                                {item.showCurrencySymbol === false ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                            
                             <input
-                                value={price.replace('$', '')}
-                                onChange={(e) => handleLocalChange('price', `$${e.target.value}`)}
-                                className="w-14 lg:w-20 text-sm lg:text-base font-black bg-transparent border-none focus:ring-0 p-0 text-white"
-                                placeholder="0.00"
+                                value={price}
+                                onChange={(e) => handleLocalChange('price', e.target.value)}
+                                className={`w-20 lg:w-24 text-sm lg:text-base font-black bg-transparent border-none focus:ring-0 p-0 transition-all ${
+                                    item.showCurrencySymbol === false ? 'text-white/40' : 'text-white'
+                                }`}
+                                placeholder="$0.00"
                             />
                         </div>
 
@@ -214,6 +229,8 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
     const [isSaved, setIsSaved] = useState(false);
     const [currentAction, setCurrentAction] = useState<string | null>(null);
     const [isRendering, setIsRendering] = useState(false);
+    const [renderProgress, setRenderProgress] = useState<string>('');
+    const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [userId, setUserId] = useState<string>('los-cuates');
 
     useEffect(() => {
@@ -312,7 +329,7 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
         }
     };
 
-    // BLINDAJE 2: Validación de Render y Bloqueo de UI
+    // Validación de Render y Bloqueo de UI
     const handleExport = async () => {
         // 1. Verificar imágenes locales (blob)
         const hasBlobs = props.menuItems.some(item => item.image?.startsWith('blob:')) ||
@@ -327,18 +344,45 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
         if (isRendering) return;
 
         setIsRendering(true);
+        setVideoUrl(null);
+        setRenderProgress('Iniciando...');
         try {
-            const result = await triggerRenderWorkflow({
-                menuConfig: props, // Ya enviamos los segundos, GitHub los convertirá
-                filename: `menu-${Date.now()}.mp4`
-            });
-            window.open(result.htmlUrl, '_blank');
-            alert('🚀 ¡PRODUCCIÓN INICIADA!\nSe ha abierto la pestaña de GitHub Actions. El video estará listo en breve.');
-        } catch (error) {
+            const result = await renderWithCloudRun(
+                props,
+                '1080p',
+                (progress) => setRenderProgress(progress.message)
+            );
+            setVideoUrl(result.videoUrl);
+            setRenderProgress('¡Video listo!');
+        } catch (error: any) {
             console.error('Render error:', error);
-            alert('Error al contactar con el servidor de renderizado.');
+            alert(`❌ Error en el renderizado:\n${error.message || 'Error desconocido'}`);
+            setRenderProgress('');
         } finally {
             setIsRendering(false);
+        }
+    };
+
+    const handleDownload = async (url: string) => {
+        try {
+            setCurrentAction('Preparando descarga...');
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = `Menu_${(props.restaurantName || '').replace(/[^a-zA-Z0-9]/g, '_') || 'Premium'}.mp4`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Error descargando el blob:', error);
+            // Fallback: abrir en nueva pestaña original si hay error de CORS u otro
+            window.open(url, '_blank');
+        } finally {
+            setCurrentAction(null);
         }
     };
 
@@ -445,42 +489,88 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                     </button>
                 </div>
 
-                <button
-                    onClick={async () => {
-                        setIsGenerating(true);
-                        setCurrentAction('AI Refinando...');
-                        try {
-                            const newItems = await Promise.all(props.menuItems.map(async (item) => ({
-                                ...item,
-                                name: await refineCopy(item.name),
-                                description: await refineCopy(item.description || '')
-                            })));
-                            setProps({ ...props, menuItems: newItems });
-                        } finally {
-                            setIsGenerating(false);
-                            setCurrentAction(null);
-                        }
-                    }}
-                    disabled={isGenerating || props.menuItems.length === 0}
-                    className="w-full py-4 bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 rounded-3xl text-amber-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-amber-500/10 transition-all disabled:opacity-30 disabled:grayscale"
-                >
-                    <Sparkles size={16} /> Magia AI en Textos
-                </button>
-
                 {/* EXPORT SECTION */}
                 <div className="pt-10 border-t border-white/5 space-y-6">
-                    <div className="flex items-center gap-2 text-white/10 uppercase font-black text-[10px] tracking-[0.4em]">Producción Profesional</div>
-                    <button
-                        onClick={handleExport}
-                        disabled={isRendering || props.menuItems.length === 0}
-                        className={`w-full py-6 rounded-[32px] font-black text-lg transition-all flex items-center justify-center gap-4 shadow-2xl ${isRendering ? 'bg-white/10 text-white/20' : 'bg-white text-black hover:scale-[1.02] active:scale-95 shadow-white/5'}`}
+                    <div className="flex items-center gap-2 text-white/10 uppercase font-black text-[10px] tracking-[0.4em]">Producción Profesional ☁️ Cloud Run</div>
+
+                    {/* VIDEO LISTO - Download Card */}
+                    {videoUrl && (
+                        <div className="p-5 bg-green-500/10 border border-green-500/30 rounded-3xl space-y-4 animate-in slide-in-from-bottom-4">
+                            <div className="flex items-center gap-2 text-green-400">
+                                <CheckCircle2 size={18} />
+                                <span className="text-sm font-black uppercase tracking-wide">¡Video Listo!</span>
+                            </div>
+                            <button
+                                onClick={() => handleDownload(videoUrl)}
+                                className="w-full py-4 bg-green-500 hover:bg-green-400 text-black rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20"
+                            >
+                                <Download size={20} />
+                                DESCARGAR MP4
+                            </button>
+                            <button
+                                onClick={() => { setVideoUrl(null); setRenderProgress(''); }}
+                                className="w-full py-2 text-[10px] font-bold text-white/20 hover:text-white/40 transition-colors uppercase tracking-widest"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    )}
+
+                    {/* RENDER BUTTON */}
+                    {!videoUrl && (
+                        <>
+                            <button
+                                onClick={handleExport}
+                                disabled={isRendering || props.menuItems.length === 0}
+                                className={`w-full py-6 rounded-[32px] font-black text-lg transition-all flex items-center justify-center gap-4 shadow-2xl ${
+                                    isRendering
+                                        ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30 cursor-not-allowed'
+                                        : 'bg-white text-black hover:scale-[1.02] active:scale-95 shadow-white/5'
+                                }`}
+                            >
+                                {isRendering ? <Loader2 size={24} className="animate-spin" /> : <Download size={24} />}
+                                {isRendering ? renderProgress || 'RENDERIZANDO...' : 'EXPORTAR MP4'}
+                            </button>
+                            {isRendering && (
+                                <p className="text-center text-[10px] text-white/30 font-bold uppercase tracking-widest animate-pulse">
+                                    ⏳ El render tarda ~2-5 minutos en la nube
+                                </p>
+                            )}
+                        </>
+                    )}
+
+                    {/* VER RENDERS - enlace directo a Firestore exports */}
+                    <a
+                        href="https://console.firebase.google.com/project/boxesos-crmtest/firestore/databases/-default-/data/~2Fexports"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/60 rounded-2xl text-xs font-black text-amber-400 uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-95"
                     >
-                        {isRendering ? <Loader2 size={24} className="animate-spin" /> : isRendering ? <Lock size={24} /> : <Download size={24} />}
-                        {isRendering ? 'EN COLA DE PROD...' : 'EXPORTAR VIDEO'}
-                    </button>
+                        📬 Ver Renders en Firestore
+                    </a>
+
                     <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => window.location.reload()} className="py-3 bg-white/5 rounded-2xl text-[10px] font-bold text-white/30 uppercase border border-white/5 hover:bg-white/10">Refrescar App</button>
-                        <button onClick={() => { localStorage.removeItem('menu_studio_config'); window.location.reload(); }} className="py-3 bg-red-500/10 rounded-2xl text-[10px] font-bold text-red-500/40 uppercase border border-red-500/10 hover:bg-red-500/20">Reset Data</button>
+                        <button
+                            onClick={() => {
+                                if (window.confirm('¿Recargar la aplicación? Perderás cambios no guardados.')) {
+                                    window.location.reload();
+                                }
+                            }}
+                            className="py-3 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-bold text-white/40 uppercase border border-white/10 transition-all flex items-center justify-center gap-1.5"
+                        >
+                            🔄 Recargar App
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (window.confirm('⚠️ ¿Borrar toda la configuración del menú? Esta acción no se puede deshacer.')) {
+                                    localStorage.removeItem('menu_studio_config');
+                                    window.location.reload();
+                                }
+                            }}
+                            className="py-3 bg-red-500/10 hover:bg-red-500/20 rounded-2xl text-[10px] font-bold text-red-400/60 uppercase border border-red-500/20 transition-all flex items-center justify-center gap-1.5"
+                        >
+                            🗑️ Borrar Config
+                        </button>
                     </div>
                 </div>
             </div>

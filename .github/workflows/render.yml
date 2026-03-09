@@ -49,9 +49,12 @@ jobs:
         run: npx remotion browser ensure
 
       - name: Render video
+        env:
+          MENU_PROPS: ${{ github.event.inputs.menu_props }}
         run: |
           mkdir -p out
-          npx remotion render src/index.ts PremiumMenuDynamic "out/${{ github.event.inputs.filename }}" --props '${{ github.event.inputs.menu_props }}'
+          echo "$MENU_PROPS" > out/props.json
+          npx remotion render src/index.ts PremiumMenuDynamic "out/${{ github.event.inputs.filename }}" --props=out/props.json
 
       - name: Upload to Firebase Storage
         if: success()

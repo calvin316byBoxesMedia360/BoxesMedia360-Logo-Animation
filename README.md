@@ -10,7 +10,7 @@ El sistema es una plataforma híbrida de edición de video en tiempo real:
 - **Frontend**: React + Vite (Dashboard Premium).
 - **Motor de Video**: Remotion (Live Preview & Render).
 - **Backend / Persistencia**: Firebase (Firestore, Storage, Auth).
-- **Renderizado Profesional**: GitHub Actions (Generación de MP4 en la nube).
+- **Renderizado Profesional**: **Google Cloud Run** (Microservicio Node.js que genera el MP4 con FFmpeg/Puppeteer).
 
 ---
 
@@ -65,7 +65,11 @@ Para que las imágenes funcionen en el video final:
 - **Estados**: `Queued` -> `Rendering` -> `Completed`.
 - Una vez listo, aparecerá un botón de **Descargar MP4**.
 
----
+### Descarga Forzada (Hotfix v2.1)
+- El botón **DESCARGAR MP4** ya no abre el video en el navegador. Utiliza descarga en memoria (Blob) para forzar el guardado local del archivo.
+- El archivo se nombra automáticamente con el nombre de tu restaurante: `Menu_[NombreRestaurante].mp4`.
+- Si hay error de CORS, el sistema hace fallback a abrir en nueva pestaña.
+
 
 ## 🛡️ 4. Resiliencia del Sistema (Armor Points)
 
@@ -83,18 +87,20 @@ Hemos implementado "puntos de blindaje" para asegurar que el sistema nunca falle
 - `npm run dashboard`: Abre la aplicación principal de edición (Vite).
 
 ### Variables de Entorno (`.env`)
-Asegúrate de tener estas variables configuradas:
+Asegúrate de tener estas variables configuradas para que el frontend pueda hablar con la nube:
 ```env
-VITE_GITHUB_REPO=tu-usuario/tu-repo
-VITE_GITHUB_TOKEN=tu-github-token
+VITE_CLOUD_RUN_URL=https://digital-menu-render-938762407896.us-central1.run.app
 ```
 
 ---
 
 ## 🚑 6. Solución de Problemas Comunes (FAQ)
 
-#### Q: "El video en la Bandeja de Salida dice 'Failed'"
-**A**: Generalmente se debe a una pérdida de conexión durante la subida de imágenes o a que los límites de GitHub Actions se han alcanzado. Reintenta la exportación en 5 minutos.
+#### Q: "El video en la Bandeja de Salida dice 'Failed' u ocurre un Error 500"
+**A**: Ocurre si Cloud Run se queda sin memoria (OOM) o el tiempo superó el límite. Con la revisión actual (rev-00006 / 4CPU / 8GB / 30 min), la capacidad es alta. Intenta con menos platillos o sin videos pesados si persiste.
+
+#### Q: "El Error 404 persiste al renderizar"
+**A**: Esto indica que el frontend (`index-*.js`) tiene cacheada una URL vieja de Cloud Run. Ve a `.env`, actualiza `VITE_CLOUD_RUN_URL`, ejecuta `npm run build:dashboard` y vuelve a subir a Firebase Hosting (`firebase deploy --only hosting`).
 
 #### Q: "Error 0x80070323 al abrir el video en Windows"
 **A**: Windows Media Player es impaciente. Espera a que la descarga termine al 100% o usa **VLC Media Player**.
@@ -104,5 +110,5 @@ VITE_GITHUB_TOKEN=tu-github-token
 
 ---
 
-**Última revisión completa**: 15 de Febrero, 2026.
-**Estado del sistema**: Operativo, Resiliente y Sincronizado.
+**Última revisión completa**: 8 de Marzo, 2026 (v2.1 — Hotfix Descarga Forzada).
+**Estado del sistema**: ✅ Operativo. Cloud Run `rev-00006` (4 vCPU / 8 GB / 30 min). Descarga MP4 local funcional.
