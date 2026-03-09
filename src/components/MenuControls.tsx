@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PremiumMenuProps, MenuItem } from '../compositions/PremiumMenu';
-import { saveMenuConfig, uploadMenuItemImage } from '../services/firebaseService';
+import { saveMenuConfig, uploadMenuItemImage, uploadMenuItemVideo } from '../services/firebaseService';
 import { renderWithCloudRun } from '../services/cloudRunService';
 import { auth } from '../services/firebaseConfig';
 import {
@@ -90,6 +90,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
                         item.mediaType === 'video' ? (
                             <div className="relative w-full h-full">
                                 <video
+                                    key={item.image}
                                     src={item.image}
                                     className="w-full h-full object-cover opacity-80 group-hover/img:opacity-100"
                                     muted
@@ -97,9 +98,18 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
                                     autoPlay
                                     playsInline
                                 />
-                                <div className="absolute bottom-1 right-1 bg-black/60 p-1 rounded-md">
-                                    <Film size={12} className="text-amber-500" />
+                                {/* Badge VIDEO esquina inferior */}
+                                <div className="absolute bottom-1 right-1 bg-black/70 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                                    <Film size={10} className="text-amber-400" />
+                                    <span className="text-[8px] font-black text-amber-400 uppercase">Video</span>
                                 </div>
+                                {/* Badge LISTO cuando ya esta en Firebase */}
+                                {item.image?.startsWith('https://') && (
+                                    <div className="absolute top-1 left-1 bg-green-500/80 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                                        <CheckCircle2 size={8} className="text-white" />
+                                        <span className="text-[8px] font-black text-white uppercase">Listo</span>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <img
@@ -289,10 +299,10 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
         if (!file) return;
 
         const isVideo = file.type.startsWith('video/');
-        const maxSize = isVideo ? 15 * 1024 * 1024 : 5 * 1024 * 1024;
+        const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
 
         if (file.size > maxSize) {
-            alert(isVideo ? 'El video es muy pesado. Máximo 15MB.' : 'La imagen es muy pesada. Máximo 5MB.');
+            alert(isVideo ? '⚠️ El video es muy pesado. Máximo 50MB para clips de menú.' : '⚠️ La imagen es muy pesada. Máximo 5MB.');
             return;
         }
 
@@ -317,7 +327,9 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
         setIsGenerating(true);
         setCurrentAction(isVideo ? 'Subiendo Video...' : 'Subiendo Imagen...');
         try {
-            const url = await uploadMenuItemImage(userId, file, file.name);
+            const url = isVideo
+                ? await uploadMenuItemVideo(userId, file, file.name)
+                : await uploadMenuItemImage(userId, file, file.name);
             updateItem(index, { image: url, mediaType: isVideo ? 'video' : 'image', uploadError: false });
         } catch (error: any) {
             console.error('❌ Error de subida:', error);
@@ -331,12 +343,21 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
 
     // Validación de Render y Bloqueo de UI
     const handleExport = async () => {
-        // 1. Verificar imágenes locales (blob)
-        const hasBlobs = props.menuItems.some(item => item.image?.startsWith('blob:')) ||
-            props.logoUri?.startsWith('blob:');
+        // Detectar assets locales sin subir
+        const blobImages = props.menuItems.filter(
+            item => item.image?.startsWith('blob:') && item.mediaType !== 'video'
+        );
+        const failedVideos = props.menuItems.filter(
+            item => item.uploadError === true
+        );
+        const logoIsBlob = props.logoUri?.startsWith('blob:');
 
-        if (hasBlobs) {
-            alert('❌ REGLA DE SEGURIDAD: Tienes imágenes locales (Nube Naranja parpadeando).\n\nDebes subirlas a la nube antes de exportar el video profesional.');
+        if (blobImages.length > 0 || logoIsBlob) {
+            alert('❌ REGLA DE SEGURIDAD: Tienes imágenes locales (Nube Naranja parpadeando).\n\nDeben subirse a la nube antes de exportar el video profesional.');
+            return;
+        }
+        if (failedVideos.length > 0) {
+            alert('⚠️ Algunos videos de tu menú fallaron al subirse.\n\nVuelve a subirlos o quítalos del menú antes de exportar.');
             return;
         }
 

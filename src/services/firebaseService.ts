@@ -84,6 +84,29 @@ export async function uploadMenuItemImage(userId: string, file: Blob, filename: 
 }
 
 /**
+ * Sube un clip de video de platillo a Firebase Storage
+ * @param userId ID del usuario
+ * @param file Archivo Blob/File del video
+ * @param filename Nombre del archivo
+ */
+export async function uploadMenuItemVideo(userId: string, file: Blob, filename: string): Promise<string> {
+    try {
+        const safeFilename = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const videoRef = ref(storage, `menus/${userId}/videos/${safeFilename}`);
+        // Detectar contentType real del archivo
+        const contentType = (file as File).type || 'video/mp4';
+        await uploadBytes(videoRef, file, { contentType });
+        const downloadUrl = await getDownloadURL(videoRef);
+        console.log('✅ Video de platillo subido exitosamente:', downloadUrl);
+        return downloadUrl;
+    } catch (error) {
+        console.error('❌ Error subiendo video de platillo a Storage:', error);
+        throw error;
+    }
+}
+
+
+/**
  * Sube un video MP4 a Firebase Storage y guarda sus metadatos
  * @param userId ID del usuario
  * @param file Archivo Blob/File del video
