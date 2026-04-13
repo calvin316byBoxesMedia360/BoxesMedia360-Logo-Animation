@@ -274,6 +274,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                         }}
                         muted
                         loop
+                        pauseWhenBuffering
                     />
                 ) : (
                     <Img

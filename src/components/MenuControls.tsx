@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { PremiumMenuProps, MenuItem } from '../compositions/PremiumMenu';
 import { saveMenuConfig, uploadMenuItemImage, uploadMenuItemVideo } from '../services/firebaseService';
 import { renderWithCloudRun } from '../services/cloudRunService';
+import { triggerDownload } from '../utils/downloadUtils';
 import { auth } from '../services/firebaseConfig';
 import {
     Palette,
@@ -385,26 +386,8 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
     };
 
     const handleDownload = async (url: string) => {
-        try {
-            setCurrentAction('Preparando descarga...');
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = `Menu_${(props.restaurantName || '').replace(/[^a-zA-Z0-9]/g, '_') || 'Premium'}.mp4`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(blobUrl);
-        } catch (error) {
-            console.error('Error descargando el blob:', error);
-            // Fallback: abrir en nueva pestaña original si hay error de CORS u otro
-            window.open(url, '_blank');
-        } finally {
-            setCurrentAction(null);
-        }
+        const filename = `Menu_${(props.restaurantName || '').replace(/[^a-zA-Z0-9]/g, '_') || 'Premium'}.mp4`;
+        await triggerDownload(url, filename, (msg) => setCurrentAction(msg));
     };
 
     return (

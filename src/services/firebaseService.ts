@@ -73,7 +73,8 @@ export async function getMenuConfig(userId: string): Promise<PremiumMenuProps | 
 export async function uploadMenuItemImage(userId: string, file: Blob, filename: string): Promise<string> {
     try {
         const imageRef = ref(storage, `menus/${userId}/items/${Date.now()}_${filename}`);
-        await uploadBytes(imageRef, file);
+        const contentType = file.type || 'image/jpeg';
+        await uploadBytes(imageRef, file, { contentType });
         const downloadUrl = await getDownloadURL(imageRef);
         console.log('✅ Imagen subida exitosamente:', downloadUrl);
         return downloadUrl;
@@ -116,7 +117,8 @@ export async function uploadVideo(userId: string, file: Blob, filename: string) 
     try {
         // 1. Subir a Storage
         const videoRef = ref(storage, `videos/${userId}/${filename}`);
-        await uploadBytes(videoRef, file);
+        const contentType = file.type || 'video/mp4';
+        await uploadBytes(videoRef, file, { contentType });
         const downloadUrl = await getDownloadURL(videoRef);
 
         // 2. Guardar metadatos en Firestore

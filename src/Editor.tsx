@@ -8,6 +8,7 @@ import { auth, db } from './services/firebaseConfig';
 import { signInAnonymously } from 'firebase/auth';
 import { triggerRenderWorkflow } from './services/githubActionsService';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { triggerDownload } from './utils/downloadUtils';
 
 const DEFAULT_MENU_ITEMS: MenuItem[] = [
     {
@@ -293,15 +294,13 @@ export const Editor: React.FC = () => {
                                         </div>
 
                                         {exp.status === 'completed' && exp.url && (
-                                            <a
-                                                href={exp.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                            <button
+                                                onClick={() => triggerDownload(exp.url, exp.filename || 'menu-premium.mp4')}
                                                 className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-black text-[10px] font-black rounded-xl transition-all shadow-lg shadow-green-500/20"
                                             >
                                                 <Download size={14} />
                                                 BAJAR
-                                            </a>
+                                            </button>
                                         )}
                                     </div>
                                 ))
