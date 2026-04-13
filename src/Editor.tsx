@@ -45,6 +45,8 @@ export const Editor: React.FC = () => {
         restaurantName: 'Los Cuates',
         accentColor: '#D4AF37',
         sceneDuration: 4.0, // Ahora en Segundos
+        lightFxEnabled: false,
+        lightFxMode: 'softGlow',
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);

@@ -23,7 +23,8 @@ import {
     Film,
     Infinity,
     Eye,
-    EyeOff
+    EyeOff,
+    Sun
 } from 'lucide-react';
 
 interface MenuControlsProps {
@@ -390,6 +391,9 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
         await triggerDownload(url, filename, (msg) => setCurrentAction(msg));
     };
 
+    const isLightFxEnabled = props.lightFxEnabled === true;
+    const lightFxMode = props.lightFxMode || 'softGlow';
+
     return (
         <div className="flex flex-col h-full bg-[#0a0a0a] text-white">
             {/* STICKY HEADER AI STYLE */}
@@ -491,6 +495,60 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                             {props.isSeamlessLoop ? 'ON' : 'OFF'}
                         </div>
                     </button>
+                </div>
+
+                <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-white/30">
+                            <Sun size={14} />
+                            <span className="text-[9px] font-black uppercase">Luz FX</span>
+                        </div>
+                        <button
+                            onClick={() =>
+                                setProps((prev) => ({
+                                    ...prev,
+                                    lightFxEnabled: !(prev.lightFxEnabled === true),
+                                    lightFxMode: prev.lightFxMode || 'softGlow',
+                                }))
+                            }
+                            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                                isLightFxEnabled
+                                    ? 'bg-amber-500 text-black border-amber-400'
+                                    : 'bg-white/5 text-white/40 border-white/10'
+                            }`}
+                        >
+                            {isLightFxEnabled ? 'ON' : 'OFF'}
+                        </button>
+                    </div>
+
+                    {isLightFxEnabled && (
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={() => setProps((prev) => ({ ...prev, lightFxMode: 'softGlow' }))}
+                                className={`py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                                    lightFxMode === 'softGlow'
+                                        ? 'bg-amber-500/20 text-amber-500 border-amber-500/50'
+                                        : 'bg-black/30 text-white/40 border-white/10'
+                                }`}
+                            >
+                                Brillo Suave
+                            </button>
+                            <button
+                                onClick={() => setProps((prev) => ({ ...prev, lightFxMode: 'vividPop' }))}
+                                className={`py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                                    lightFxMode === 'vividPop'
+                                        ? 'bg-amber-500/20 text-amber-500 border-amber-500/50'
+                                        : 'bg-black/30 text-white/40 border-white/10'
+                                }`}
+                            >
+                                Vibrante Pop
+                            </button>
+                        </div>
+                    )}
+
+                    <p className="text-[9px] text-white/35 leading-relaxed">
+                        Apagado mantiene el look cinematográfico oscuro. Encendido aplica un look más luminoso.
+                    </p>
                 </div>
 
                 {/* EXPORT SECTION */}

@@ -24,6 +24,8 @@ export interface PremiumMenuProps {
     logoUri?: string;
     backgroundMusic?: string;
     isSeamlessLoop?: boolean;
+    lightFxEnabled?: boolean;
+    lightFxMode?: 'softGlow' | 'vividPop';
     [key: string]: any;
 }
 
@@ -115,9 +117,20 @@ interface DishSceneProps {
     sceneIndex?: number;
     isSeamlessLoop?: boolean;
     isLastScene?: boolean;
+    lightFxEnabled?: boolean;
+    lightFxMode?: 'softGlow' | 'vividPop';
 }
 
-const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor, sceneIndex = 0, isSeamlessLoop = false, isLastScene = false }) => {
+const DishScene: React.FC<DishSceneProps> = ({
+    item,
+    sceneDuration,
+    accentColor,
+    sceneIndex = 0,
+    isSeamlessLoop = false,
+    isLastScene = false,
+    lightFxEnabled = false,
+    lightFxMode = 'softGlow',
+}) => {
     const frame = useCurrentFrame();
     const [imgError, setImgError] = useState(false);
 
@@ -258,6 +271,40 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
     }, [item.image, imgError]);
 
     const isVideo = mediaType === 'video';
+    const mediaFilter = !lightFxEnabled
+        ? undefined
+        : lightFxMode === 'vividPop'
+            ? 'brightness(1.12) saturate(1.2) contrast(1.06)'
+            : 'brightness(1.08) saturate(1.1) contrast(1.03)';
+
+    const lightingOverlay = !lightFxEnabled
+        ? `
+              radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%),
+              linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8) 100%)
+            `
+        : lightFxMode === 'vividPop'
+            ? `
+              radial-gradient(ellipse at center, rgba(255,255,255,0.18) 0%, rgba(255,230,150,0.14) 45%, rgba(0,0,0,0.15) 100%),
+              linear-gradient(to bottom, rgba(255,255,255,0.12) 0%, rgba(255,220,140,0.12) 45%, rgba(0,0,0,0.08) 100%)
+            `
+            : `
+              radial-gradient(ellipse at center, rgba(255,255,255,0.14) 0%, rgba(255,235,170,0.1) 45%, rgba(0,0,0,0.12) 100%),
+              linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(255,225,150,0.09) 40%, rgba(0,0,0,0.1) 100%)
+            `;
+
+    const vignetteShadow = !lightFxEnabled
+        ? 'inset 0 0 200px rgba(0,0,0,0.7)'
+        : lightFxMode === 'vividPop'
+            ? 'inset 0 0 120px rgba(255,220,120,0.22)'
+            : 'inset 0 0 140px rgba(255,220,140,0.16)';
+
+    const toneOverlayColor = !lightFxEnabled
+        ? 'rgba(255, 200, 100, 0.15)'
+        : lightFxMode === 'vividPop'
+            ? 'rgba(255, 235, 170, 0.24)'
+            : 'rgba(255, 230, 170, 0.18)';
+
+    const toneBlendMode: 'overlay' | 'screen' = lightFxEnabled ? 'screen' : 'overlay';
 
     return (
         <AbsoluteFill style={{ opacity }}>
@@ -271,6 +318,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                             height: '100%',
                             objectFit: 'cover',
                             transform: `scale(${scale}) translateY(${translateY}px)`,
+                            filter: mediaFilter,
                         }}
                         muted
                         loop
@@ -285,6 +333,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                             height: '100%',
                             objectFit: 'cover',
                             transform: `scale(${scale}) translateY(${translateY}px)`,
+                            filter: mediaFilter,
                         }}
                     />
                 )}
@@ -293,10 +342,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                     style={{
                         position: 'absolute',
                         inset: 0,
-                        background: `
-              radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%),
-              linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8) 100%)
-            `,
+                        background: lightingOverlay,
                     }}
                 />
 
@@ -305,7 +351,7 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                     style={{
                         position: 'absolute',
                         inset: 0,
-                        boxShadow: 'inset 0 0 200px rgba(0,0,0,0.7)',
+                        boxShadow: vignetteShadow,
                     }}
                 />
 
@@ -313,8 +359,8 @@ const DishScene: React.FC<DishSceneProps> = ({ item, sceneDuration, accentColor,
                     style={{
                         position: 'absolute',
                         inset: 0,
-                        background: 'rgba(255, 200, 100, 0.15)',
-                        mixBlendMode: 'overlay',
+                        background: toneOverlayColor,
+                        mixBlendMode: toneBlendMode,
                     }}
                 />
             </div>
@@ -441,6 +487,8 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     sceneDuration = 4.0, // Ahora en segundos
     isSeamlessLoop: isSeamlessLoopProp = false,
     logoUri,
+    lightFxEnabled = false,
+    lightFxMode = 'softGlow',
 }) => {
     // Asegurar booleano real (parche para CLI de Remotion)
     const isSeamlessLoop = isSeamlessLoopProp === true || (isSeamlessLoopProp as unknown) === 'true';
@@ -520,6 +568,8 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
                         sceneIndex={item.sceneIndex}
                         isSeamlessLoop={isSeamlessLoop}
                         isLastScene={index === itemsWithSequences.length - 1}
+                        lightFxEnabled={lightFxEnabled}
+                        lightFxMode={lightFxMode}
                     />
                 </Sequence>
             ))}

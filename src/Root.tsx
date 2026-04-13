@@ -18,6 +18,8 @@ const sampleMenuData: PremiumMenuProps = {
   restaurantName: 'Los Cuates',
   accentColor: '#D4AF37',
   sceneDuration: 4.0, // Ahora en segundos
+  lightFxEnabled: false,
+  lightFxMode: 'softGlow',
 };
 
 // Función para calcular duración basada en props con mayor robustez
