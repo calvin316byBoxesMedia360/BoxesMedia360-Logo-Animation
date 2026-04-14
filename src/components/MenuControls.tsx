@@ -531,7 +531,7 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                                         : 'bg-black/30 text-white/40 border-white/10'
                                 }`}
                             >
-                                Brillo Suave
+                                Studio Crisp
                             </button>
                             <button
                                 onClick={() => setProps((prev) => ({ ...prev, lightFxMode: 'vividPop' }))}
@@ -541,13 +541,13 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                                         : 'bg-black/30 text-white/40 border-white/10'
                                 }`}
                             >
-                                Vibrante Pop
+                                Brand Pop
                             </button>
                         </div>
                     )}
 
                     <p className="text-[9px] text-white/35 leading-relaxed">
-                        Apagado mantiene el look cinematográfico oscuro. Encendido aplica un look más luminoso.
+                        Apagado mantiene el look cinematográfico oscuro. Encendido aplica un look nítido y publicitario.
                     </p>
                 </div>
 

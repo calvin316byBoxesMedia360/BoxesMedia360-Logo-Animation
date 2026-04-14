@@ -93,9 +93,9 @@ const GoldenParticles: React.FC<{ color?: string }> = ({ color = DEFAULT_COLORS.
 // ============================================
 // 🎞️ EFECTO DE GRANO DE PELÍCULA
 // ============================================
-const FilmGrain: React.FC = () => {
+const FilmGrain: React.FC<{ opacity?: number }> = ({ opacity = 0.04 }) => {
     return (
-        <AbsoluteFill style={{ pointerEvents: 'none', opacity: 0.04, mixBlendMode: 'overlay' }}>
+        <AbsoluteFill style={{ pointerEvents: 'none', opacity, mixBlendMode: 'overlay' }}>
             <svg width="100%" height="100%">
                 <filter id="grainy">
                     <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
@@ -274,8 +274,8 @@ const DishScene: React.FC<DishSceneProps> = ({
     const mediaFilter = !lightFxEnabled
         ? undefined
         : lightFxMode === 'vividPop'
-            ? 'brightness(1.12) saturate(1.2) contrast(1.06)'
-            : 'brightness(1.08) saturate(1.1) contrast(1.03)';
+            ? 'brightness(1.18) contrast(1.24) saturate(1.34)'
+            : 'brightness(1.14) contrast(1.18) saturate(1.2)';
 
     const lightingOverlay = !lightFxEnabled
         ? `
@@ -284,27 +284,57 @@ const DishScene: React.FC<DishSceneProps> = ({
             `
         : lightFxMode === 'vividPop'
             ? `
-              radial-gradient(ellipse at center, rgba(255,255,255,0.18) 0%, rgba(255,230,150,0.14) 45%, rgba(0,0,0,0.15) 100%),
-              linear-gradient(to bottom, rgba(255,255,255,0.12) 0%, rgba(255,220,140,0.12) 45%, rgba(0,0,0,0.08) 100%)
+              radial-gradient(ellipse at 52% 45%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.08) 40%, rgba(0,0,0,0.12) 100%),
+              linear-gradient(to bottom, rgba(255,255,255,0.08) 0%, rgba(255,245,220,0.05) 38%, rgba(0,0,0,0.2) 100%)
             `
             : `
-              radial-gradient(ellipse at center, rgba(255,255,255,0.14) 0%, rgba(255,235,170,0.1) 45%, rgba(0,0,0,0.12) 100%),
-              linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(255,225,150,0.09) 40%, rgba(0,0,0,0.1) 100%)
+              radial-gradient(ellipse at 50% 45%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.06) 40%, rgba(0,0,0,0.14) 100%),
+              linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, rgba(255,246,226,0.04) 35%, rgba(0,0,0,0.24) 100%)
             `;
+
+    const clarityOverlay = !lightFxEnabled
+        ? 'transparent'
+        : lightFxMode === 'vividPop'
+            ? 'linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.1) 100%)'
+            : 'linear-gradient(to bottom, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.12) 100%)';
 
     const vignetteShadow = !lightFxEnabled
         ? 'inset 0 0 200px rgba(0,0,0,0.7)'
         : lightFxMode === 'vividPop'
-            ? 'inset 0 0 120px rgba(255,220,120,0.22)'
-            : 'inset 0 0 140px rgba(255,220,140,0.16)';
+            ? 'inset 0 0 70px rgba(0,0,0,0.18)'
+            : 'inset 0 0 80px rgba(0,0,0,0.22)';
 
     const toneOverlayColor = !lightFxEnabled
         ? 'rgba(255, 200, 100, 0.15)'
         : lightFxMode === 'vividPop'
-            ? 'rgba(255, 235, 170, 0.24)'
-            : 'rgba(255, 230, 170, 0.18)';
+            ? 'rgba(255, 248, 230, 0.08)'
+            : 'rgba(255, 245, 220, 0.06)';
 
-    const toneBlendMode: 'overlay' | 'screen' = lightFxEnabled ? 'screen' : 'overlay';
+    const toneBlendMode = !lightFxEnabled
+        ? 'overlay'
+        : lightFxMode === 'vividPop'
+            ? 'screen'
+            : 'soft-light';
+
+    const titleColor = lightFxEnabled ? '#fffdf7' : DEFAULT_COLORS.cream;
+    const descriptionColor = lightFxEnabled ? 'rgba(255,248,236,0.96)' : DEFAULT_COLORS.cream;
+    const titleShadow = lightFxEnabled
+        ? (lightFxMode === 'vividPop'
+            ? '0 3px 14px rgba(0,0,0,0.36)'
+            : '0 3px 12px rgba(0,0,0,0.38)')
+        : '4px 4px 0 rgba(0,0,0,0.5), 0 0 40px rgba(0,0,0,0.8)';
+    const descriptionShadow = lightFxEnabled
+        ? '0 2px 8px rgba(0,0,0,0.42)'
+        : '2px 2px 8px rgba(0,0,0,0.9)';
+    const priceCardBg = lightFxEnabled
+        ? 'rgba(255,255,255,0.18)'
+        : `${accentColor}20`;
+    const priceCardBorder = lightFxEnabled
+        ? '1px solid rgba(255,255,255,0.35)'
+        : `1px solid ${accentColor}40`;
+    const priceShadow = lightFxEnabled
+        ? `0 0 10px ${accentColor}66`
+        : `0 0 15px ${accentColor}80`;
 
     return (
         <AbsoluteFill style={{ opacity }}>
@@ -363,6 +393,16 @@ const DishScene: React.FC<DishSceneProps> = ({
                         mixBlendMode: toneBlendMode,
                     }}
                 />
+
+                <div
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: clarityOverlay,
+                        mixBlendMode: 'multiply',
+                        opacity: lightFxEnabled ? 1 : 0,
+                    }}
+                />
             </div>
 
             <div
@@ -379,9 +419,9 @@ const DishScene: React.FC<DishSceneProps> = ({
                         fontFamily: '"Playfair Display", Georgia, serif',
                         fontSize: getNameFontSize(item.name, item.fontSizeMode),
                         fontWeight: 900,
-                        color: DEFAULT_COLORS.cream,
+                        color: titleColor,
                         margin: 0,
-                        textShadow: `4px 4px 0 rgba(0,0,0,0.5), 0 0 40px rgba(0,0,0,0.8)`,
+                        textShadow: titleShadow,
                         opacity: nameOpacity,
                         transform: `translateY(${nameY}px)`,
                         letterSpacing: '-0.02em',
@@ -397,9 +437,9 @@ const DishScene: React.FC<DishSceneProps> = ({
                         fontFamily: '"Lato", Arial, sans-serif',
                         fontSize: getDescFontSize(item.description, item.fontSizeMode),
                         fontWeight: 400,
-                        color: DEFAULT_COLORS.cream,
+                        color: descriptionColor,
                         margin: '20px 0 0 0',
-                        textShadow: '2px 2px 8px rgba(0,0,0,0.9)',
+                        textShadow: descriptionShadow,
                         opacity: descOpacity,
                         letterSpacing: '0.05em',
                         lineHeight: 1.4,
@@ -419,11 +459,11 @@ const DishScene: React.FC<DishSceneProps> = ({
                     }}
                 >
                     <div style={{
-                        backgroundColor: `${accentColor}20`,
+                        backgroundColor: priceCardBg,
                         backdropFilter: 'blur(10px)',
                         padding: '10px 25px',
                         borderRadius: '15px',
-                        border: `1px solid ${accentColor}40`,
+                        border: priceCardBorder,
                     }}>
                         <span
                             style={{
@@ -431,7 +471,7 @@ const DishScene: React.FC<DishSceneProps> = ({
                                 fontSize: 48 * getTextMultiplier(item.fontSizeMode),
                                 fontWeight: 900,
                                 color: accentColor,
-                                textShadow: `0 0 15px ${accentColor}80`,
+                                textShadow: priceShadow,
                                 letterSpacing: '0.02em',
                             }}
                         >
@@ -495,6 +535,11 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
 
     // Convertir segundos a frames para la lógica interna
     const sceneDurationFrames = Math.round(sceneDuration * 30);
+    const grainOpacity = !lightFxEnabled
+        ? 0.04
+        : lightFxMode === 'vividPop'
+            ? 0.006
+            : 0.01;
 
     // BLINDAJE 3: Fallback para menú vacío (Evita crash de Remotion)
     const safeMenuItems = useMemo(() => {
@@ -552,8 +597,8 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
 
     return (
         <AbsoluteFill style={{ backgroundColor: DEFAULT_COLORS.dark }}>
-            <FilmGrain />
-            <GoldenParticles color={accentColor} />
+            <FilmGrain opacity={grainOpacity} />
+            {!lightFxEnabled && <GoldenParticles color={accentColor} />}
 
             {itemsWithSequences.map((item, index) => (
                 <Sequence
