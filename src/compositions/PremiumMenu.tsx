@@ -274,8 +274,8 @@ const DishScene: React.FC<DishSceneProps> = ({
     const mediaFilter = !lightFxEnabled
         ? undefined
         : lightFxMode === 'vividPop'
-            ? 'brightness(1.18) contrast(1.24) saturate(1.34)'
-            : 'brightness(1.14) contrast(1.18) saturate(1.2)';
+            ? 'brightness(1.03) contrast(1.15) saturate(1.13)'
+            : 'brightness(1.01) contrast(1.1) saturate(1.08)';
 
     const lightingOverlay = !lightFxEnabled
         ? `
@@ -284,36 +284,36 @@ const DishScene: React.FC<DishSceneProps> = ({
             `
         : lightFxMode === 'vividPop'
             ? `
-              radial-gradient(ellipse at 52% 45%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.08) 40%, rgba(0,0,0,0.12) 100%),
-              linear-gradient(to bottom, rgba(255,255,255,0.08) 0%, rgba(255,245,220,0.05) 38%, rgba(0,0,0,0.2) 100%)
+              radial-gradient(ellipse at 52% 42%, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 44%, rgba(0,0,0,0.06) 100%),
+              linear-gradient(to bottom, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 48%, rgba(0,0,0,0.08) 100%)
             `
             : `
-              radial-gradient(ellipse at 50% 45%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.06) 40%, rgba(0,0,0,0.14) 100%),
-              linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, rgba(255,246,226,0.04) 35%, rgba(0,0,0,0.24) 100%)
+              radial-gradient(ellipse at 50% 42%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 42%, rgba(0,0,0,0.07) 100%),
+              linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.015) 46%, rgba(0,0,0,0.1) 100%)
             `;
 
     const clarityOverlay = !lightFxEnabled
         ? 'transparent'
         : lightFxMode === 'vividPop'
-            ? 'linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.1) 100%)'
-            : 'linear-gradient(to bottom, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.12) 100%)';
+            ? 'linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.04) 100%)'
+            : 'linear-gradient(to bottom, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.05) 100%)';
 
     const vignetteShadow = !lightFxEnabled
         ? 'inset 0 0 200px rgba(0,0,0,0.7)'
         : lightFxMode === 'vividPop'
-            ? 'inset 0 0 70px rgba(0,0,0,0.18)'
-            : 'inset 0 0 80px rgba(0,0,0,0.22)';
+            ? 'inset 0 0 46px rgba(0,0,0,0.12)'
+            : 'inset 0 0 54px rgba(0,0,0,0.14)';
 
     const toneOverlayColor = !lightFxEnabled
         ? 'rgba(255, 200, 100, 0.15)'
         : lightFxMode === 'vividPop'
-            ? 'rgba(255, 248, 230, 0.08)'
-            : 'rgba(255, 245, 220, 0.06)';
+            ? 'rgba(255,255,255,0.02)'
+            : 'rgba(255,255,255,0.015)';
 
     const toneBlendMode = !lightFxEnabled
         ? 'overlay'
         : lightFxMode === 'vividPop'
-            ? 'screen'
+            ? 'soft-light'
             : 'soft-light';
 
     const titleColor = lightFxEnabled ? '#fffdf7' : DEFAULT_COLORS.cream;
@@ -327,7 +327,7 @@ const DishScene: React.FC<DishSceneProps> = ({
         ? '0 2px 8px rgba(0,0,0,0.42)'
         : '2px 2px 8px rgba(0,0,0,0.9)';
     const priceCardBg = lightFxEnabled
-        ? 'rgba(255,255,255,0.18)'
+        ? 'rgba(255,255,255,0.1)'
         : `${accentColor}20`;
     const priceCardBorder = lightFxEnabled
         ? '1px solid rgba(255,255,255,0.35)'
@@ -335,6 +335,11 @@ const DishScene: React.FC<DishSceneProps> = ({
     const priceShadow = lightFxEnabled
         ? `0 0 10px ${accentColor}66`
         : `0 0 15px ${accentColor}80`;
+    const clarityOverlayOpacity = !lightFxEnabled
+        ? 0
+        : lightFxMode === 'vividPop'
+            ? 0.45
+            : 0.3;
 
     return (
         <AbsoluteFill style={{ opacity }}>
@@ -399,8 +404,8 @@ const DishScene: React.FC<DishSceneProps> = ({
                         position: 'absolute',
                         inset: 0,
                         background: clarityOverlay,
-                        mixBlendMode: 'multiply',
-                        opacity: lightFxEnabled ? 1 : 0,
+                        mixBlendMode: 'soft-light',
+                        opacity: clarityOverlayOpacity,
                     }}
                 />
             </div>
@@ -538,8 +543,8 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     const grainOpacity = !lightFxEnabled
         ? 0.04
         : lightFxMode === 'vividPop'
-            ? 0.006
-            : 0.01;
+            ? 0.002
+            : 0.003;
 
     // BLINDAJE 3: Fallback para menú vacío (Evita crash de Remotion)
     const safeMenuItems = useMemo(() => {
