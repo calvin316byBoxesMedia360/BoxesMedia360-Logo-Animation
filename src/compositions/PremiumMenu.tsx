@@ -25,7 +25,7 @@ export interface PremiumMenuProps {
     backgroundMusic?: string;
     isSeamlessLoop?: boolean;
     lightFxEnabled?: boolean;
-    lightFxMode?: 'softGlow' | 'vividPop';
+    lightFxMode?: 'native' | 'softGlow' | 'vividPop' | 'warmBistro' | 'dramaticDark';
     [key: string]: any;
 }
 
@@ -118,7 +118,7 @@ interface DishSceneProps {
     isSeamlessLoop?: boolean;
     isLastScene?: boolean;
     lightFxEnabled?: boolean;
-    lightFxMode?: 'softGlow' | 'vividPop';
+    lightFxMode?: 'native' | 'softGlow' | 'vividPop' | 'warmBistro' | 'dramaticDark';
 }
 
 const DishScene: React.FC<DishSceneProps> = ({
@@ -271,75 +271,160 @@ const DishScene: React.FC<DishSceneProps> = ({
     }, [item.image, imgError]);
 
     const isVideo = mediaType === 'video';
-    const mediaFilter = !lightFxEnabled
-        ? undefined
-        : lightFxMode === 'vividPop'
-            ? 'brightness(1.03) contrast(1.15) saturate(1.13)'
-            : 'brightness(1.01) contrast(1.1) saturate(1.08)';
 
-    const lightingOverlay = !lightFxEnabled
-        ? `
-              radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%),
-              linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8) 100%)
-            `
-        : lightFxMode === 'vividPop'
-            ? `
-              radial-gradient(ellipse at 52% 42%, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 44%, rgba(0,0,0,0.06) 100%),
-              linear-gradient(to bottom, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 48%, rgba(0,0,0,0.08) 100%)
-            `
-            : `
-              radial-gradient(ellipse at 50% 42%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 42%, rgba(0,0,0,0.07) 100%),
-              linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.015) 46%, rgba(0,0,0,0.1) 100%)
-            `;
+    // ── PRESET DE FILTROS ──────────────────────────────────────────────────────
+    // off          = look cinematográfico oscuro (cuando Luz FX está apagado)
+    // native       = imagen 100% original — solo gradiente mínimo para texto
+    // softGlow     = Studio A — brillo suave, colores naturales
+    // warmBistro   = Calidez  — tono dorado estilo bistró/Instagram
+    // dramaticDark = Dramático — contraste fuerte, moody
+    // vividPop     = Vivid Pop — colores intensos, look de anuncio comercial
 
-    const clarityOverlay = !lightFxEnabled
-        ? 'transparent'
-        : lightFxMode === 'vividPop'
-            ? 'linear-gradient(to bottom, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.04) 100%)'
-            : 'linear-gradient(to bottom, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.05) 100%)';
+    type FilterMode = 'native' | 'softGlow' | 'warmBistro' | 'dramaticDark' | 'vividPop';
+    const mode: FilterMode | 'off' = !lightFxEnabled ? 'off' : (lightFxMode as FilterMode) || 'native';
 
-    const vignetteShadow = !lightFxEnabled
-        ? 'inset 0 0 200px rgba(0,0,0,0.7)'
-        : lightFxMode === 'vividPop'
-            ? 'inset 0 0 46px rgba(0,0,0,0.12)'
-            : 'inset 0 0 54px rgba(0,0,0,0.14)';
+    const mediaFilter: string | undefined = ({
+        off:          undefined,
+        native:       undefined,
+        softGlow:     'brightness(1.07) contrast(1.18) saturate(1.1)',
+        warmBistro:   'brightness(1.04) contrast(1.22) saturate(1.38)',
+        dramaticDark: 'brightness(0.92) contrast(1.32) saturate(0.88)',
+        vividPop:     'brightness(1.06) contrast(1.38) saturate(1.6)',
+    } as Record<string, string | undefined>)[mode];
 
-    const toneOverlayColor = !lightFxEnabled
-        ? 'rgba(255, 200, 100, 0.15)'
-        : lightFxMode === 'vividPop'
-            ? 'rgba(255,255,255,0.02)'
-            : 'rgba(255,255,255,0.015)';
+    // Gradiente de fondo — solo el bottom se oscurece para legibilidad del texto
+    const lightingOverlay: string = ({
+        off: `
+            radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%),
+            linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8) 100%)
+        `,
+        native: `
+            linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 28%, transparent 50%)
+        `,
+        softGlow: `
+            linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.22) 32%, transparent 56%)
+        `,
+        warmBistro: `
+            radial-gradient(ellipse at 50% 45%, rgba(255,195,80,0.07) 0%, transparent 65%),
+            linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.25) 35%, transparent 58%)
+        `,
+        dramaticDark: `
+            radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.52) 100%),
+            linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)
+        `,
+        vividPop: `
+            radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(0,0,0,0.2) 100%),
+            linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.15) 35%, transparent 58%)
+        `,
+    } as Record<string, string>)[mode];
 
-    const toneBlendMode = !lightFxEnabled
-        ? 'overlay'
-        : lightFxMode === 'vividPop'
-            ? 'soft-light'
-            : 'soft-light';
+    const vignetteShadow: string = ({
+        off:          'inset 0 0 200px rgba(0,0,0,0.7)',
+        native:       'none',
+        softGlow:     'inset 0 0 70px rgba(0,0,0,0.12)',
+        warmBistro:   'inset 0 0 150px rgba(0,0,0,0.44)',
+        dramaticDark: 'inset 0 0 200px rgba(0,0,0,0.72)',
+        vividPop:     'inset 0 0 100px rgba(0,0,0,0.22)',
+    } as Record<string, string>)[mode];
 
-    const titleColor = lightFxEnabled ? '#fffdf7' : DEFAULT_COLORS.cream;
-    const descriptionColor = lightFxEnabled ? 'rgba(255,248,236,0.96)' : DEFAULT_COLORS.cream;
-    const titleShadow = lightFxEnabled
-        ? (lightFxMode === 'vividPop'
-            ? '0 3px 14px rgba(0,0,0,0.36)'
-            : '0 3px 12px rgba(0,0,0,0.38)')
-        : '4px 4px 0 rgba(0,0,0,0.5), 0 0 40px rgba(0,0,0,0.8)';
-    const descriptionShadow = lightFxEnabled
-        ? '0 2px 8px rgba(0,0,0,0.42)'
-        : '2px 2px 8px rgba(0,0,0,0.9)';
-    const priceCardBg = lightFxEnabled
-        ? 'rgba(255,255,255,0.1)'
-        : `${accentColor}20`;
-    const priceCardBorder = lightFxEnabled
-        ? '1px solid rgba(255,255,255,0.35)'
-        : `1px solid ${accentColor}40`;
-    const priceShadow = lightFxEnabled
-        ? `0 0 10px ${accentColor}66`
-        : `0 0 15px ${accentColor}80`;
-    const clarityOverlayOpacity = !lightFxEnabled
-        ? 0
-        : lightFxMode === 'vividPop'
-            ? 0.45
-            : 0.3;
+    const toneOverlayColor: string = ({
+        off:          'rgba(255, 200, 100, 0.15)',
+        native:       'transparent',
+        softGlow:     'transparent',
+        warmBistro:   'rgba(255, 175, 50, 0.09)',
+        dramaticDark: 'rgba(255, 200, 100, 0.15)',
+        vividPop:     'rgba(255,255,255,0.015)',
+    } as Record<string, string>)[mode];
+
+    const toneBlendMode: React.CSSProperties['mixBlendMode'] = ({
+        off:          'overlay' as const,
+        native:       'normal' as const,
+        softGlow:     'normal' as const,
+        warmBistro:   'overlay' as const,
+        dramaticDark: 'overlay' as const,
+        vividPop:     'soft-light' as const,
+    } as Record<string, React.CSSProperties['mixBlendMode']>)[mode];
+
+    const clarityOverlay: string = ({
+        off:          'transparent',
+        native:       'transparent',
+        softGlow:     'linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, transparent 45%)',
+        warmBistro:   'linear-gradient(to bottom, rgba(255,220,120,0.04) 0%, transparent 45%)',
+        dramaticDark: 'transparent',
+        vividPop:     'linear-gradient(to bottom, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.06) 100%)',
+    } as Record<string, string>)[mode];
+
+    const clarityOverlayOpacity: number = ({
+        off:          0,
+        native:       0,
+        softGlow:     0.5,
+        warmBistro:   0.5,
+        dramaticDark: 0,
+        vividPop:     0.55,
+    } as Record<string, number>)[mode];
+
+    const titleColor: string = ({
+        off:          DEFAULT_COLORS.cream,
+        native:       '#ffffff',
+        softGlow:     '#ffffff',
+        warmBistro:   '#fff8ec',
+        dramaticDark: DEFAULT_COLORS.cream,
+        vividPop:     '#ffffff',
+    } as Record<string, string>)[mode];
+
+    const descriptionColor: string = ({
+        off:          DEFAULT_COLORS.cream,
+        native:       'rgba(255,255,255,0.92)',
+        softGlow:     'rgba(255,255,255,0.92)',
+        warmBistro:   'rgba(255,245,220,0.95)',
+        dramaticDark: DEFAULT_COLORS.cream,
+        vividPop:     'rgba(255,255,255,0.94)',
+    } as Record<string, string>)[mode];
+
+    const titleShadow: string = ({
+        off:          '4px 4px 0 rgba(0,0,0,0.5), 0 0 40px rgba(0,0,0,0.8)',
+        native:       '0 2px 20px rgba(0,0,0,0.8)',
+        softGlow:     '0 2px 16px rgba(0,0,0,0.55)',
+        warmBistro:   '0 3px 18px rgba(0,0,0,0.55)',
+        dramaticDark: '4px 4px 0 rgba(0,0,0,0.5), 0 0 40px rgba(0,0,0,0.8)',
+        vividPop:     '0 3px 14px rgba(0,0,0,0.55)',
+    } as Record<string, string>)[mode];
+
+    const descriptionShadow: string = ({
+        off:          '2px 2px 8px rgba(0,0,0,0.9)',
+        native:       '0 2px 12px rgba(0,0,0,0.85)',
+        softGlow:     '0 2px 10px rgba(0,0,0,0.6)',
+        warmBistro:   '0 2px 10px rgba(0,0,0,0.6)',
+        dramaticDark: '2px 2px 8px rgba(0,0,0,0.9)',
+        vividPop:     '0 2px 10px rgba(0,0,0,0.65)',
+    } as Record<string, string>)[mode];
+
+    const priceCardBg: string = ({
+        off:          `${accentColor}20`,
+        native:       'rgba(0,0,0,0.35)',
+        softGlow:     'rgba(255,255,255,0.14)',
+        warmBistro:   'rgba(255,210,100,0.12)',
+        dramaticDark: `${accentColor}20`,
+        vividPop:     'rgba(255,255,255,0.1)',
+    } as Record<string, string>)[mode];
+
+    const priceCardBorder: string = ({
+        off:          `1px solid ${accentColor}40`,
+        native:       `1px solid ${accentColor}60`,
+        softGlow:     '1px solid rgba(255,255,255,0.4)',
+        warmBistro:   '1px solid rgba(255,210,100,0.45)',
+        dramaticDark: `1px solid ${accentColor}40`,
+        vividPop:     '1px solid rgba(255,255,255,0.35)',
+    } as Record<string, string>)[mode];
+
+    const priceShadow: string = ({
+        off:          `0 0 15px ${accentColor}80`,
+        native:       `0 0 14px ${accentColor}70`,
+        softGlow:     `0 0 12px ${accentColor}55`,
+        warmBistro:   `0 0 14px ${accentColor}66`,
+        dramaticDark: `0 0 15px ${accentColor}80`,
+        vividPop:     `0 0 16px ${accentColor}77`,
+    } as Record<string, string>)[mode];
 
     return (
         <AbsoluteFill style={{ opacity }}>
@@ -544,7 +629,13 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
         ? 0.04
         : lightFxMode === 'vividPop'
             ? 0.002
-            : 0.003;
+            : lightFxMode === 'softGlow'
+                ? 0.012  // Studio A: grano muy sutil para añadir textura natural
+                : lightFxMode === 'warmBistro'
+                    ? 0.018  // Calidez: grano suave tipo película analógica
+                    : lightFxMode === 'dramaticDark'
+                        ? 0.04   // Dramático: mismo grano que cinematográfico OFF
+                        : 0.003;
 
     // BLINDAJE 3: Fallback para menú vacío (Evita crash de Remotion)
     const safeMenuItems = useMemo(() => {

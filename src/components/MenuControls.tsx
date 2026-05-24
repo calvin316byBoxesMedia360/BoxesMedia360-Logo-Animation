@@ -394,6 +394,34 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
     const isLightFxEnabled = props.lightFxEnabled === true;
     const lightFxMode = props.lightFxMode || 'softGlow';
 
+    const LUZ_FX_PRESETS = [
+        {
+            id: 'native',
+            label: 'Nativo',
+            desc: 'Imagen 100% original — sin filtros ni color. Solo gradiente mínimo para el texto.',
+        },
+        {
+            id: 'softGlow',
+            label: 'Studio A',
+            desc: 'Limpio y brillante — preserva colores naturales de la foto',
+        },
+        {
+            id: 'warmBistro',
+            label: 'Calidez',
+            desc: 'Tono dorado cálido estilo bistró / Instagram food',
+        },
+        {
+            id: 'dramaticDark',
+            label: 'Dramático',
+            desc: 'Contraste fuerte, oscuro y cinematográfico',
+        },
+        {
+            id: 'vividPop',
+            label: 'Vivid Pop',
+            desc: 'Colores ultra intensos, look de anuncio comercial',
+        },
+    ] as const;
+
     return (
         <div className="flex flex-col h-full bg-[#0a0a0a] text-white">
             {/* STICKY HEADER AI STYLE */}
@@ -523,31 +551,34 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
 
                     {isLightFxEnabled && (
                         <div className="grid grid-cols-2 gap-2">
-                            <button
-                                onClick={() => setProps((prev) => ({ ...prev, lightFxMode: 'softGlow' }))}
-                                className={`py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${
-                                    lightFxMode === 'softGlow'
-                                        ? 'bg-amber-500/20 text-amber-500 border-amber-500/50'
-                                        : 'bg-black/30 text-white/40 border-white/10'
-                                }`}
-                            >
-                                Studio Crisp
-                            </button>
-                            <button
-                                onClick={() => setProps((prev) => ({ ...prev, lightFxMode: 'vividPop' }))}
-                                className={`py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${
-                                    lightFxMode === 'vividPop'
-                                        ? 'bg-amber-500/20 text-amber-500 border-amber-500/50'
-                                        : 'bg-black/30 text-white/40 border-white/10'
-                                }`}
-                            >
-                                Brand Pop
-                            </button>
+                            {LUZ_FX_PRESETS.map((preset) => (
+                                <button
+                                    key={preset.id}
+                                    onClick={() => setProps((prev) => ({ ...prev, lightFxMode: preset.id }))}
+                                    title={preset.desc}
+                                    className={`py-2.5 px-2 rounded-xl text-[10px] font-black uppercase border transition-all text-left leading-tight ${
+                                        lightFxMode === preset.id
+                                            ? 'bg-amber-500/20 text-amber-500 border-amber-500/50'
+                                            : 'bg-black/30 text-white/40 border-white/10 hover:text-white/60 hover:border-white/20'
+                                    }`}
+                                >
+                                    {preset.label}
+                                </button>
+                            ))}
                         </div>
                     )}
 
                     <p className="text-[9px] text-white/35 leading-relaxed">
-                        Apagado mantiene el look cinematográfico oscuro. Encendido aplica un look nítido y publicitario.
+                        {isLightFxEnabled
+                            ? ({
+                                native:       'Nativo — imagen original intacta, solo sombra de texto.',
+                                softGlow:     'Studio A — brillo suave, colores fieles a la foto.',
+                                warmBistro:   'Calidez — tono dorado cálido, estilo bistró e Instagram.',
+                                dramaticDark: 'Dramático — contraste fuerte y viñeta oscura cinematográfica.',
+                                vividPop:     'Vivid Pop — colores intensos para look de anuncio comercial.',
+                            } as Record<string, string>)[lightFxMode] ?? 'Selecciona un preset arriba.'
+                            : 'Apagado mantiene el look cinematográfico oscuro base.'
+                        }
                     </p>
                 </div>
 
