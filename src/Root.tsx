@@ -92,6 +92,11 @@ export const RemotionRoot: React.FC = () => {
   const hasValidProps = inputProps && inputProps.menuItems && inputProps.menuItems.length > 0;
   const currentDuration = calculateMenuDuration(hasValidProps ? inputProps : sampleMenuData);
 
+  // Determinar la orientación dinámica
+  const isVertical = inputProps?.orientation === 'vertical' || (!hasValidProps && sampleMenuData.orientation === 'vertical');
+  const currentWidth = isVertical ? 1080 : 1920;
+  const currentHeight = isVertical ? 1920 : 1080;
+
   return (
     <>
       <Composition
@@ -150,8 +155,8 @@ export const RemotionRoot: React.FC = () => {
         component={PremiumMenuDynamic}
         durationInFrames={currentDuration}
         fps={30}
-        width={1920}
-        height={1080}
+        width={currentWidth}
+        height={currentHeight}
         defaultProps={sampleMenuData}
       />
     </>

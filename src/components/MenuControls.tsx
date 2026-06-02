@@ -582,6 +582,44 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                     </p>
                 </div>
 
+                {/* 🆕 FORMAT / ORIENTATION SELECTOR */}
+                <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-white/30">
+                            <Film size={14} className="text-amber-500" />
+                            <span className="text-[9px] font-black uppercase">Formato de Pantalla</span>
+                        </div>
+                        <div className="flex gap-1">
+                            <button
+                                onClick={() => setProps((prev) => ({ ...prev, orientation: 'landscape' }))}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                                    props.orientation !== 'vertical'
+                                        ? 'bg-amber-500 text-black border-amber-400'
+                                        : 'bg-black/30 text-white/40 border-white/10 hover:text-white/60'
+                                }`}
+                            >
+                                Horizontal 16:9
+                            </button>
+                            <button
+                                onClick={() => setProps((prev) => ({ ...prev, orientation: 'vertical' }))}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                                    props.orientation === 'vertical'
+                                        ? 'bg-amber-500 text-black border-amber-400'
+                                        : 'bg-black/30 text-white/40 border-white/10 hover:text-white/60'
+                                }`}
+                            >
+                                Vertical 9:16
+                            </button>
+                        </div>
+                    </div>
+                    <p className="text-[9px] text-white/35 leading-relaxed">
+                        {props.orientation === 'vertical'
+                            ? 'Formato vertical 1080x1920 para pantallas publicitarias o celulares.'
+                            : 'Formato horizontal 1920x1080 para pantallas de TV convencionales.'
+                        }
+                    </p>
+                </div>
+
                 {/* EXPORT SECTION */}
                 <div className="pt-10 border-t border-white/5 space-y-6">
                     <div className="flex items-center gap-2 text-white/10 uppercase font-black text-[10px] tracking-[0.4em]">Producción Profesional ☁️ Cloud Run</div>

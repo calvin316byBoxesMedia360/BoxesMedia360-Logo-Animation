@@ -26,6 +26,7 @@ export interface PremiumMenuProps {
     isSeamlessLoop?: boolean;
     lightFxEnabled?: boolean;
     lightFxMode?: 'native' | 'softGlow' | 'vividPop' | 'warmBistro' | 'dramaticDark';
+    orientation?: 'landscape' | 'vertical';
     [key: string]: any;
 }
 
