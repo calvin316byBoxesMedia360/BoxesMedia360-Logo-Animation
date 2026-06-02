@@ -29,6 +29,7 @@ export interface PremiumMenuProps {
     orientation?: 'landscape' | 'vertical';
     darkOverlayEnabled?: boolean;
     motionEnabled?: boolean;
+    mediaPadding?: number;
     [key: string]: any;
 }
 
@@ -124,6 +125,7 @@ interface DishSceneProps {
     lightFxMode?: 'native' | 'softGlow' | 'vividPop' | 'warmBistro' | 'dramaticDark';
     darkOverlayEnabled?: boolean;
     motionEnabled?: boolean;
+    mediaPadding?: number;
 }
 
 const DishScene: React.FC<DishSceneProps> = ({
@@ -137,6 +139,7 @@ const DishScene: React.FC<DishSceneProps> = ({
     lightFxMode = 'softGlow',
     darkOverlayEnabled = true,
     motionEnabled = true,
+    mediaPadding = 0,
 }) => {
     const frame = useCurrentFrame();
     const [imgError, setImgError] = useState(false);
@@ -442,8 +445,13 @@ const DishScene: React.FC<DishSceneProps> = ({
     } as Record<string, string>)[mode];
 
     return (
-        <AbsoluteFill style={{ opacity }}>
-            <div style={{ position: 'absolute', width: '100%', height: '100%', overflow: 'hidden' }}>
+        <AbsoluteFill style={{ opacity, backgroundColor: 'black' }}>
+            <div style={{ 
+                position: 'absolute', 
+                inset: mediaPadding, 
+                overflow: 'hidden',
+                backgroundColor: 'black'
+            }}>
                 {isVideo ? (
                     <Video
                         src={mediaSrc}
@@ -636,6 +644,7 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     lightFxMode = 'softGlow',
     darkOverlayEnabled = true,
     motionEnabled = true,
+    mediaPadding = 0,
 }) => {
     // Asegurar booleano real (parche para CLI de Remotion)
     const isSeamlessLoop = isSeamlessLoopProp === true || (isSeamlessLoopProp as unknown) === 'true';
@@ -730,6 +739,7 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
                         lightFxMode={lightFxMode}
                         darkOverlayEnabled={darkOverlayEnabled}
                         motionEnabled={motionEnabled}
+                        mediaPadding={mediaPadding}
                     />
                 </Sequence>
             ))}

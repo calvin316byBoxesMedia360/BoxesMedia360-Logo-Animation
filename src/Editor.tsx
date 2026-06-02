@@ -50,6 +50,7 @@ export const Editor: React.FC = () => {
         orientation: 'landscape',
         darkOverlayEnabled: true,
         motionEnabled: true,
+        mediaPadding: 0,
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);

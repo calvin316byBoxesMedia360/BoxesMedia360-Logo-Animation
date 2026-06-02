@@ -655,6 +655,33 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                     </button>
                 </div>
 
+                {/* 🆕 MARGIN / SAFETY BORDER SELECTOR */}
+                <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-white/30">
+                            <Sun size={14} className="text-amber-500" />
+                            <span className="text-[9px] font-black uppercase">Margen de Seguridad</span>
+                        </div>
+                        <span className="text-[10px] font-black text-amber-500 uppercase">
+                            {props.mediaPadding || 0}px
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <input
+                            type="range"
+                            min="0"
+                            max="80"
+                            step="10"
+                            value={props.mediaPadding || 0}
+                            onChange={(e) => setProps((prev) => ({ ...prev, mediaPadding: parseInt(e.target.value) }))}
+                            className="flex-1 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                        />
+                    </div>
+                    <p className="text-[9px] text-white/35 leading-relaxed">
+                        Agrega un borde negro alrededor de las imágenes para evitar que las esquinas redondeadas del reproductor o pantallas físicas recorten tus diseños.
+                    </p>
+                </div>
+
                 {/* EXPORT SECTION */}
                 <div className="pt-10 border-t border-white/5 space-y-6">
                     <div className="flex items-center gap-2 text-white/10 uppercase font-black text-[10px] tracking-[0.4em]">Producción Profesional ☁️ Cloud Run</div>
