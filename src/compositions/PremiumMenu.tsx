@@ -27,6 +27,8 @@ export interface PremiumMenuProps {
     lightFxEnabled?: boolean;
     lightFxMode?: 'native' | 'softGlow' | 'vividPop' | 'warmBistro' | 'dramaticDark';
     orientation?: 'landscape' | 'vertical';
+    darkOverlayEnabled?: boolean;
+    motionEnabled?: boolean;
     [key: string]: any;
 }
 
@@ -120,6 +122,8 @@ interface DishSceneProps {
     isLastScene?: boolean;
     lightFxEnabled?: boolean;
     lightFxMode?: 'native' | 'softGlow' | 'vividPop' | 'warmBistro' | 'dramaticDark';
+    darkOverlayEnabled?: boolean;
+    motionEnabled?: boolean;
 }
 
 const DishScene: React.FC<DishSceneProps> = ({
@@ -131,6 +135,8 @@ const DishScene: React.FC<DishSceneProps> = ({
     isLastScene = false,
     lightFxEnabled = false,
     lightFxMode = 'softGlow',
+    darkOverlayEnabled = true,
+    motionEnabled = true,
 }) => {
     const frame = useCurrentFrame();
     const [imgError, setImgError] = useState(false);
@@ -153,6 +159,7 @@ const DishScene: React.FC<DishSceneProps> = ({
 
     // Ken Burns Dinámico - Automático
     const scale = useMemo(() => {
+        if (motionEnabled === false) return 1;
         if (isSeamlessLoop && isLastScene) return 1;
         if (mediaType === 'video') return 1; // Sin zoom en videos
 
@@ -163,14 +170,15 @@ const DishScene: React.FC<DishSceneProps> = ({
             return interpolate(frame, [0, sceneDuration], [1.15, 1], { easing: Easing.out(Easing.quad), extrapolateRight: 'clamp' });
         }
         return 1.1; // Base para paneo vertical
-    }, [frame, sceneDuration, moveType, isSeamlessLoop, isLastScene, mediaType]);
+    }, [frame, sceneDuration, moveType, isSeamlessLoop, isLastScene, mediaType, motionEnabled]);
 
     const translateY = useMemo(() => {
+        if (motionEnabled === false) return 0;
         if (isSeamlessLoop && isLastScene) return 0;
         if (mediaType === 'video' || moveType !== 'pan-vertical') return 0;
 
         return interpolate(frame, [0, sceneDuration], [-30, 30], { easing: Easing.inOut(Easing.quad), extrapolateRight: 'clamp' });
-    }, [frame, sceneDuration, moveType, isSeamlessLoop, isLastScene, mediaType]);
+    }, [frame, sceneDuration, moveType, isSeamlessLoop, isLastScene, mediaType, motionEnabled]);
 
     const translateX = useMemo(() => {
         return 0; // Simplificamos para no marear al usuario
@@ -294,48 +302,54 @@ const DishScene: React.FC<DishSceneProps> = ({
     } as Record<string, string | undefined>)[mode];
 
     // Gradiente de fondo — solo el bottom se oscurece para legibilidad del texto
-    const lightingOverlay: string = ({
-        off: `
-            radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%),
-            linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8) 100%)
-        `,
-        native: `
-            linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 28%, transparent 50%)
-        `,
-        softGlow: `
-            linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.22) 32%, transparent 56%)
-        `,
-        warmBistro: `
-            radial-gradient(ellipse at 50% 45%, rgba(255,195,80,0.07) 0%, transparent 65%),
-            linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.25) 35%, transparent 58%)
-        `,
-        dramaticDark: `
-            radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.52) 100%),
-            linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)
-        `,
-        vividPop: `
-            radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(0,0,0,0.2) 100%),
-            linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.15) 35%, transparent 58%)
-        `,
-    } as Record<string, string>)[mode];
+    const lightingOverlay: string = darkOverlayEnabled === false 
+        ? 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 20%, transparent 45%)'
+        : ({
+            off: `
+                radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%),
+                linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8) 100%)
+            `,
+            native: `
+                linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 28%, transparent 50%)
+            `,
+            softGlow: `
+                linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.22) 32%, transparent 56%)
+            `,
+            warmBistro: `
+                radial-gradient(ellipse at 50% 45%, rgba(255,195,80,0.07) 0%, transparent 65%),
+                linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.25) 35%, transparent 58%)
+            `,
+            dramaticDark: `
+                radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.52) 100%),
+                linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)
+            `,
+            vividPop: `
+                radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(0,0,0,0.2) 100%),
+                linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.15) 35%, transparent 58%)
+            `,
+        } as Record<string, string>)[mode];
 
-    const vignetteShadow: string = ({
-        off:          'inset 0 0 200px rgba(0,0,0,0.7)',
-        native:       'none',
-        softGlow:     'inset 0 0 70px rgba(0,0,0,0.12)',
-        warmBistro:   'inset 0 0 150px rgba(0,0,0,0.44)',
-        dramaticDark: 'inset 0 0 200px rgba(0,0,0,0.72)',
-        vividPop:     'inset 0 0 100px rgba(0,0,0,0.22)',
-    } as Record<string, string>)[mode];
+    const vignetteShadow: string = darkOverlayEnabled === false
+        ? 'none'
+        : ({
+            off:          'inset 0 0 200px rgba(0,0,0,0.7)',
+            native:       'none',
+            softGlow:     'inset 0 0 70px rgba(0,0,0,0.12)',
+            warmBistro:   'inset 0 0 150px rgba(0,0,0,0.44)',
+            dramaticDark: 'inset 0 0 200px rgba(0,0,0,0.72)',
+            vividPop:     'inset 0 0 100px rgba(0,0,0,0.22)',
+        } as Record<string, string>)[mode];
 
-    const toneOverlayColor: string = ({
-        off:          'rgba(255, 200, 100, 0.15)',
-        native:       'transparent',
-        softGlow:     'transparent',
-        warmBistro:   'rgba(255, 175, 50, 0.09)',
-        dramaticDark: 'rgba(255, 200, 100, 0.15)',
-        vividPop:     'rgba(255,255,255,0.015)',
-    } as Record<string, string>)[mode];
+    const toneOverlayColor: string = darkOverlayEnabled === false
+        ? 'transparent'
+        : ({
+            off:          'rgba(255, 200, 100, 0.15)',
+            native:       'transparent',
+            softGlow:     'transparent',
+            warmBistro:   'rgba(255, 175, 50, 0.09)',
+            dramaticDark: 'rgba(255, 200, 100, 0.15)',
+            vividPop:     'rgba(255,255,255,0.015)',
+        } as Record<string, string>)[mode];
 
     const toneBlendMode: React.CSSProperties['mixBlendMode'] = ({
         off:          'overlay' as const,
@@ -620,6 +634,8 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     logoUri,
     lightFxEnabled = false,
     lightFxMode = 'softGlow',
+    darkOverlayEnabled = true,
+    motionEnabled = true,
 }) => {
     // Asegurar booleano real (parche para CLI de Remotion)
     const isSeamlessLoop = isSeamlessLoopProp === true || (isSeamlessLoopProp as unknown) === 'true';
@@ -712,6 +728,8 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
                         isLastScene={index === itemsWithSequences.length - 1}
                         lightFxEnabled={lightFxEnabled}
                         lightFxMode={lightFxMode}
+                        darkOverlayEnabled={darkOverlayEnabled}
+                        motionEnabled={motionEnabled}
                     />
                 </Sequence>
             ))}

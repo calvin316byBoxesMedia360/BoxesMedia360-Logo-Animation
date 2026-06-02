@@ -620,6 +620,41 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                     </p>
                 </div>
 
+                {/* 🆕 EXTRA VISUAL EFFECTS SELECTOR */}
+                <div className="grid grid-cols-2 gap-4">
+                    <button
+                        onClick={() => setProps((prev) => ({ ...prev, darkOverlayEnabled: prev.darkOverlayEnabled !== false ? false : true }))}
+                        className={`p-4 rounded-3xl border transition-all space-y-3 flex flex-col items-start text-left ${
+                            props.darkOverlayEnabled !== false ? 'bg-amber-500/20 border-amber-500/50 text-amber-500' : 'bg-white/5 border-white/5 text-white/40'
+                        }`}
+                        title="Activa o desactiva la viñeta oscura para colores 100% nativos"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Sun size={14} />
+                            <span className="text-[9px] font-black uppercase">Filtro Oscuro</span>
+                        </div>
+                        <div className="text-[10px] font-black uppercase">
+                            {props.darkOverlayEnabled !== false ? 'ACTIVADO' : 'NATIVO'}
+                        </div>
+                    </button>
+
+                    <button
+                        onClick={() => setProps((prev) => ({ ...prev, motionEnabled: prev.motionEnabled !== false ? false : true }))}
+                        className={`p-4 rounded-3xl border transition-all space-y-3 flex flex-col items-start text-left ${
+                            props.motionEnabled !== false ? 'bg-amber-500/20 border-amber-500/50 text-amber-500' : 'bg-white/5 border-white/5 text-white/40'
+                        }`}
+                        title="Activa o desactiva el zoom y paneo suave de las fotos (Ken Burns)"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Film size={14} />
+                            <span className="text-[9px] font-black uppercase">Movimiento</span>
+                        </div>
+                        <div className="text-[10px] font-black uppercase">
+                            {props.motionEnabled !== false ? 'ACTIVADO' : 'ESTÁTICO'}
+                        </div>
+                    </button>
+                </div>
+
                 {/* EXPORT SECTION */}
                 <div className="pt-10 border-t border-white/5 space-y-6">
                     <div className="flex items-center gap-2 text-white/10 uppercase font-black text-[10px] tracking-[0.4em]">Producción Profesional ☁️ Cloud Run</div>

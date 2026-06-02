@@ -48,6 +48,8 @@ export const Editor: React.FC = () => {
         lightFxEnabled: false,
         lightFxMode: 'softGlow',
         orientation: 'landscape',
+        darkOverlayEnabled: true,
+        motionEnabled: true,
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
