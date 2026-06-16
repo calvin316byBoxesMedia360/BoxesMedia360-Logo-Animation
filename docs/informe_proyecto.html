@@ -627,7 +627,8 @@
 
       <!-- Tab Buttons Navigation -->
       <div class="terminal-tabs">
-        <button class="tab-btn active" onclick="switchTab('status')">STATUS</button>
+        <button class="tab-btn active" onclick="switchTab('overview')">OVERVIEW</button>
+        <button class="tab-btn" onclick="switchTab('status')">STATUS</button>
         <button class="tab-btn" onclick="switchTab('changelog')">CHANGELOG</button>
         <button class="tab-btn" onclick="switchTab('history')">HISTORY</button>
         <button class="tab-btn" onclick="switchTab('stack')">STACK</button>
@@ -638,8 +639,49 @@
       <!-- Terminal Body Content -->
       <div class="terminal-body">
 
+        <!-- TAB 0: OVERVIEW -->
+        <div id="tab-overview" class="tab-content active">
+          <h3 class="section-title">DESCRIPCION_GENERAL_Y_PROPOSITO</h3>
+          
+          <div class="card">
+            <div class="corner-tl"></div><div class="corner-tr"></div>
+            <div class="corner-bl"></div><div class="corner-br"></div>
+            <h4 style="color: var(--gp); margin-bottom: 12px;">¿QUÉ ES Y PARA QUÉ FUE CREADO?</h4>
+            <p style="font-size: 13px; color: var(--gd); margin-bottom: 15px; text-align: justify; line-height: 1.6;">
+              <strong>VIDEOSTUDIO_OS (Digital Menu Studio)</strong> es una plataforma de señalización digital programática concebida para automatizar el diseño y la renderización de menús dinámicos para restaurantes y entornos de venta. Fue creado para responder a la necesidad de actualizar precios, platillos y promociones de forma instantánea desde una base de datos centralizada y compilar dichos cambios automáticamente en videos fluidos MP4 en alta definición, evitando el laborioso proceso de re-edición de video manual.
+            </p>
+            <p style="font-size: 13px; color: var(--gd); text-align: justify; line-height: 1.6;">
+              Las composiciones y transiciones cinemáticas (como el zoom progresivo Ken Burns) se describen mediante código React y componentes web estándar, lo que garantiza una fluidez constante de 30fps sin pérdida de fidelidad en la previsualización del navegador y en la exportación del renderizador Remotion.
+            </p>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="corner-tl"></div><div class="corner-tr"></div>
+              <div class="corner-bl"></div><div class="corner-br"></div>
+              <h4 style="color: var(--gp); margin-bottom: 12px;">APLICACION_PRACTICA</h4>
+              <ul style="list-style-type: none; font-size: 12px; color: var(--gd); padding-left: 5px; line-height: 1.8;">
+                <li style="margin-bottom: 8px;"><span style="color: var(--gp); font-weight: bold;">[✓] Cartelería en Restaurantes:</span> Menús dinámicos proyectados en Smart TVs de forma física vertical u horizontal en el local comercial.</li>
+                <li style="margin-bottom: 8px;"><span style="color: var(--gp); font-weight: bold;">[✓] Renders Locales Rápidos:</span> Compilación directa a video MP4 optimizada en el equipo local del administrador del sistema.</li>
+                <li style="margin-bottom: 8px;"><span style="color: var(--gp); font-weight: bold;">[✓] Flexibilidad Física:</span> Soporte de rotación a -90° (girado a la izquierda) en canvas de 1920x1080 para pantallas físicamente montadas verticales en la pared.</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <div class="corner-tl"></div><div class="corner-tr"></div>
+              <div class="corner-bl"></div><div class="corner-br"></div>
+              <h4 style="color: var(--gp); margin-bottom: 12px;">FUNCIONALIDADES_CLAVE</h4>
+              <ul style="list-style-type: none; font-size: 12px; color: var(--gd); padding-left: 5px; line-height: 1.8;">
+                <li style="margin-bottom: 8px;"><span style="color: var(--gp); font-weight: bold;">· Smart Blurred Fit:</span> Doble capa de imagen para que los logos/productos no se corten, recortando 5px/2px exteriores con clipPath para eliminar los halos blancos de los bordes.</li>
+                <li style="margin-bottom: 8px;"><span style="color: var(--gp); font-weight: bold;">· Local Browser Bypass:</span> Detección de Chrome/Edge en el host local de Windows para usar códecs H.264 nativos del sistema.</li>
+                <li style="margin-bottom: 8px;"><span style="color: var(--gp); font-weight: bold;">· Panel de Control Completo:</span> Ajustes de insets, overlays, animaciones y paddings directamente en el dashboard.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <!-- TAB 1: STATUS -->
-        <div id="tab-status" class="tab-content active">
+        <div id="tab-status" class="tab-content">
           <div class="grid-4">
             <div class="kpi-card">
               <div class="kpi-val">4 / 4</div>
