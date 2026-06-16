@@ -1,4 +1,5 @@
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing, Img, Video, staticFile, Sequence } from 'remotion';
+import { Video as RemotionMediaVideo } from '@remotion/media';
 import React, { useMemo, useState } from 'react';
 
 // ============================================
@@ -30,6 +31,8 @@ export interface PremiumMenuProps {
     darkOverlayEnabled?: boolean;
     motionEnabled?: boolean;
     mediaPadding?: number;
+    rotation?: 'none' | 'left';
+    isRendering?: boolean;
     [key: string]: any;
 }
 
@@ -122,10 +125,12 @@ interface DishSceneProps {
     isSeamlessLoop?: boolean;
     isLastScene?: boolean;
     lightFxEnabled?: boolean;
-    lightFxMode?: 'native' | 'softGlow' | 'vividPop' | 'warmBistro' | 'dramaticDark';
+    lightFxMode?: 'native' | 'pureNative' | 'softGlow' | 'vividPop' | 'warmBistro' | 'dramaticDark';
     darkOverlayEnabled?: boolean;
     motionEnabled?: boolean;
     mediaPadding?: number;
+    isRendering?: boolean;
+    showTextElements?: boolean;
 }
 
 const DishScene: React.FC<DishSceneProps> = ({
@@ -140,9 +145,15 @@ const DishScene: React.FC<DishSceneProps> = ({
     darkOverlayEnabled = true,
     motionEnabled = true,
     mediaPadding = 0,
+    isRendering = false,
+    showTextElements = true,
 }) => {
     const frame = useCurrentFrame();
     const [imgError, setImgError] = useState(false);
+
+    React.useEffect(() => {
+        setImgError(false);
+    }, [item.image]);
 
     // Detección automática de mediaType si falta (basado en extensión)
     const mediaType = useMemo(() => {
@@ -181,6 +192,21 @@ const DishScene: React.FC<DishSceneProps> = ({
         if (mediaType === 'video' || moveType !== 'pan-vertical') return 0;
 
         return interpolate(frame, [0, sceneDuration], [-30, 30], { easing: Easing.inOut(Easing.quad), extrapolateRight: 'clamp' });
+    }, [frame, sceneDuration, moveType, isSeamlessLoop, isLastScene, mediaType, motionEnabled]);
+
+    const foregroundScale = useMemo(() => {
+        if (isSeamlessLoop && isLastScene) return 1;
+        if (mediaType === 'video') return 1;
+        if (motionEnabled === false) return 1;
+
+        // Muy sutil para evitar recortar logos o textos de los bordes
+        if (moveType === 'zoom-in') {
+            return interpolate(frame, [0, sceneDuration], [1, 1.03], { easing: Easing.out(Easing.quad), extrapolateRight: 'clamp' });
+        }
+        if (moveType === 'zoom-out') {
+            return interpolate(frame, [0, sceneDuration], [1.03, 1], { easing: Easing.out(Easing.quad), extrapolateRight: 'clamp' });
+        }
+        return 1.01;
     }, [frame, sceneDuration, moveType, isSeamlessLoop, isLastScene, mediaType, motionEnabled]);
 
     const translateX = useMemo(() => {
@@ -452,34 +478,92 @@ const DishScene: React.FC<DishSceneProps> = ({
                 overflow: 'hidden',
                 backgroundColor: 'black'
             }}>
-                {isVideo ? (
-                    <Video
-                        src={mediaSrc}
-                        onError={() => setImgError(true)}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            transform: `scale(${scale}) translateY(${translateY}px)`,
-                            filter: mediaFilter,
-                        }}
-                        muted
-                        loop
-                        pauseWhenBuffering
-                    />
-                ) : (
-                    <Img
-                        src={mediaSrc}
-                        onError={() => setImgError(true)}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            transform: `scale(${scale}) translateY(${translateY}px)`,
-                            filter: mediaFilter,
-                        }}
-                    />
-                )}
+                {/* 1. Capa de Fondo (Blurred Cover): Llena toda la pantalla con desenfoque estético */}
+                <div style={{
+                    position: 'absolute',
+                    inset: -20, // Sobresale para evitar bordes blancos causados por el blur
+                    overflow: 'hidden',
+                    filter: `${mediaFilter || ''} blur(25px) brightness(0.45)`,
+                    transform: `scale(${scale * 1.15}) translateY(${translateY}px)`,
+                    opacity: 0.85
+                }}>
+                    {isVideo ? (
+                        <Video
+                            src={mediaSrc}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            muted
+                            loop
+                        />
+                    ) : (
+                        <Img
+                            src={mediaSrc}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                    )}
+                </div>
+
+                {/* 2. Capa Principal (Foreground): Ajuste 'contain' para mostrar la imagen completa */}
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden'
+                }}>
+                    {isVideo ? (
+                        isRendering ? (
+                            <RemotionMediaVideo
+                                src={mediaSrc}
+                                onError={(() => setImgError(true)) as any}
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '100%',
+                                    width: 'auto',
+                                    height: 'auto',
+                                    objectFit: 'contain',
+                                    filter: mediaFilter,
+                                    transform: `scale(${foregroundScale})`,
+                                    clipPath: 'inset(5px 2px)',
+                                }}
+                                muted
+                                loop
+                            />
+                        ) : (
+                            <Video
+                                src={mediaSrc}
+                                onError={() => setImgError(true)}
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '100%',
+                                    width: 'auto',
+                                    height: 'auto',
+                                    objectFit: 'contain',
+                                    filter: mediaFilter,
+                                    transform: `scale(${foregroundScale})`,
+                                    clipPath: 'inset(5px 2px)',
+                                }}
+                                muted
+                                loop
+                            />
+                        )
+                    ) : (
+                        <Img
+                            src={mediaSrc}
+                            onError={() => setImgError(true)}
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                width: 'auto',
+                                height: 'auto',
+                                objectFit: 'contain',
+                                filter: mediaFilter,
+                                transform: `scale(${foregroundScale})`,
+                                clipPath: 'inset(5px 2px)',
+                            }}
+                        />
+                    )}
+                </div>
 
                 <div
                     style={{
@@ -518,81 +602,83 @@ const DishScene: React.FC<DishSceneProps> = ({
                 />
             </div>
 
-            <div
-                style={{
-                    position: 'absolute',
-                    bottom: 80,
-                    left: 80,
-                    right: 80,
-                    opacity: textFadeOut,
-                }}
-            >
-                <h1
-                    style={{
-                        fontFamily: '"Playfair Display", Georgia, serif',
-                        fontSize: getNameFontSize(item.name, item.fontSizeMode),
-                        fontWeight: 900,
-                        color: titleColor,
-                        margin: 0,
-                        textShadow: titleShadow,
-                        opacity: nameOpacity,
-                        transform: `translateY(${nameY}px)`,
-                        letterSpacing: '-0.02em',
-                        lineHeight: 1.1,
-                        maxWidth: '90%'
-                    }}
-                >
-                    {item.name}
-                </h1>
-
-                <p
-                    style={{
-                        fontFamily: '"Lato", Arial, sans-serif',
-                        fontSize: getDescFontSize(item.description, item.fontSizeMode),
-                        fontWeight: 400,
-                        color: descriptionColor,
-                        margin: '20px 0 0 0',
-                        textShadow: descriptionShadow,
-                        opacity: descOpacity,
-                        letterSpacing: '0.05em',
-                        lineHeight: 1.4,
-                        maxWidth: '80%',
-                        fontStyle: 'italic'
-                    }}
-                >
-                    {item.description}
-                </p>
-
+            {(showTextElements !== false) && (
                 <div
                     style={{
-                        marginTop: 35,
-                        display: 'inline-block',
-                        opacity: priceOpacity,
-                        transform: `scale(${priceScale})`,
+                        position: 'absolute',
+                        bottom: 80,
+                        left: 80,
+                        right: 80,
+                        opacity: textFadeOut,
                     }}
                 >
-                    <div style={{
-                        backgroundColor: priceCardBg,
-                        backdropFilter: 'blur(10px)',
-                        padding: '10px 25px',
-                        borderRadius: '15px',
-                        border: priceCardBorder,
-                    }}>
-                        <span
-                            style={{
-                                fontFamily: '"Playfair Display", Georgia, serif',
-                                fontSize: 48 * getTextMultiplier(item.fontSizeMode),
-                                fontWeight: 900,
-                                color: accentColor,
-                                textShadow: priceShadow,
-                                letterSpacing: '0.02em',
-                            }}
-                        >
-                            {(item.showCurrencySymbol !== false) ? item.price : item.price.replace(/[^\d.,]/g, '').trim()}
-                        </span>
+                    <h1
+                        style={{
+                            fontFamily: '"Playfair Display", Georgia, serif',
+                            fontSize: getNameFontSize(item.name, item.fontSizeMode),
+                            fontWeight: 900,
+                            color: titleColor,
+                            margin: 0,
+                            textShadow: titleShadow,
+                            opacity: nameOpacity,
+                            transform: `translateY(${nameY}px)`,
+                            letterSpacing: '-0.02em',
+                            lineHeight: 1.1,
+                            maxWidth: '90%'
+                        }}
+                    >
+                        {item.name}
+                    </h1>
+
+                    <p
+                        style={{
+                            fontFamily: '"Lato", Arial, sans-serif',
+                            fontSize: getDescFontSize(item.description, item.fontSizeMode),
+                            fontWeight: 400,
+                            color: descriptionColor,
+                            margin: '20px 0 0 0',
+                            textShadow: descriptionShadow,
+                            opacity: descOpacity,
+                            letterSpacing: '0.05em',
+                            lineHeight: 1.4,
+                            maxWidth: '80%',
+                            fontStyle: 'italic'
+                        }}
+                    >
+                        {item.description}
+                    </p>
+
+                    <div
+                        style={{
+                            marginTop: 35,
+                            display: 'inline-block',
+                            opacity: priceOpacity,
+                            transform: `scale(${priceScale})`,
+                        }}
+                    >
+                        <div style={{
+                            backgroundColor: priceCardBg,
+                            backdropFilter: 'blur(10px)',
+                            padding: '10px 25px',
+                            borderRadius: '15px',
+                            border: priceCardBorder,
+                        }}>
+                            <span
+                                style={{
+                                    fontFamily: '"Playfair Display", Georgia, serif',
+                                    fontSize: 48 * getTextMultiplier(item.fontSizeMode),
+                                    fontWeight: 900,
+                                    color: accentColor,
+                                    textShadow: priceShadow,
+                                    letterSpacing: '0.02em',
+                                }}
+                            >
+                                {(item.showCurrencySymbol !== false) ? (item.price || '') : (item.price || '').replace(/[^\d.,]/g, '').trim()}
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Decoración lateral */}
             <div
@@ -645,6 +731,9 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     darkOverlayEnabled = true,
     motionEnabled = true,
     mediaPadding = 0,
+    rotation = 'none',
+    isRendering = false,
+    showTextElements = true,
 }) => {
     // Asegurar booleano real (parche para CLI de Remotion)
     const isSeamlessLoop = isSeamlessLoopProp === true || (isSeamlessLoopProp as unknown) === 'true';
@@ -717,48 +806,64 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
         });
     }, [itemsToRender, sceneDurationFrames, isSeamlessLoop]);
 
+    const isRotatedLeft = rotation === 'left';
+
     return (
         <AbsoluteFill style={{ backgroundColor: DEFAULT_COLORS.dark }}>
-            <FilmGrain opacity={grainOpacity} />
-            {!lightFxEnabled && <GoldenParticles color={accentColor} />}
+            <div style={{
+                position: isRotatedLeft ? 'absolute' : 'relative',
+                width: isRotatedLeft ? 1080 : '100%',
+                height: isRotatedLeft ? 1920 : '100%',
+                left: isRotatedLeft ? '50%' : 'auto',
+                top: isRotatedLeft ? '50%' : 'auto',
+                transform: isRotatedLeft ? 'translate(-50%, -50%) rotate(-90deg)' : 'none',
+                transformOrigin: 'center center',
+                backgroundColor: DEFAULT_COLORS.dark,
+                overflow: 'hidden',
+            }}>
+                <FilmGrain opacity={grainOpacity} />
+                {!lightFxEnabled && <GoldenParticles color={accentColor} />}
 
-            {itemsWithSequences.map((item, index) => (
-                <Sequence
-                    key={`${index}-${item.name}-${index}`}
-                    from={item.startFrame}
-                    durationInFrames={item.durationFrames}
-                >
-                    <DishScene
-                        item={item}
-                        sceneDuration={item.durationFrames}
-                        accentColor={accentColor}
-                        sceneIndex={item.sceneIndex}
-                        isSeamlessLoop={isSeamlessLoop}
-                        isLastScene={index === itemsWithSequences.length - 1}
-                        lightFxEnabled={lightFxEnabled}
-                        lightFxMode={lightFxMode}
-                        darkOverlayEnabled={darkOverlayEnabled}
-                        motionEnabled={motionEnabled}
-                        mediaPadding={mediaPadding}
-                    />
-                </Sequence>
-            ))}
+                {itemsWithSequences.map((item, index) => (
+                    <Sequence
+                        key={`${index}-${item.name}-${index}`}
+                        from={item.startFrame}
+                        durationInFrames={item.durationFrames}
+                    >
+                        <DishScene
+                            item={item}
+                            sceneDuration={item.durationFrames}
+                            accentColor={accentColor}
+                            sceneIndex={item.sceneIndex}
+                            isSeamlessLoop={isSeamlessLoop}
+                            isLastScene={index === itemsWithSequences.length - 1}
+                            lightFxEnabled={lightFxEnabled}
+                            lightFxMode={lightFxMode}
+                            darkOverlayEnabled={darkOverlayEnabled}
+                            motionEnabled={motionEnabled}
+                            mediaPadding={mediaPadding}
+                            isRendering={isRendering}
+                            showTextElements={showTextElements}
+                        />
+                    </Sequence>
+                ))}
 
-            {logoUri && (
-                <AbsoluteFill style={{ pointerEvents: 'none' }}>
-                    <div style={{
-                        position: 'absolute',
-                        top: 40,
-                        right: 40,
-                        width: 150,
-                        height: 150,
-                        opacity: 0.8,
-                        filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.5))',
-                    }}>
-                        <Img src={logoUri} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    </div>
-                </AbsoluteFill>
-            )}
+                {logoUri && (
+                    <AbsoluteFill style={{ pointerEvents: 'none' }}>
+                        <div style={{
+                            position: 'absolute',
+                            top: 40,
+                            right: 40,
+                            width: 150,
+                            height: 150,
+                            opacity: 0.8,
+                            filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.5))',
+                        }}>
+                            <Img src={logoUri} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        </div>
+                    </AbsoluteFill>
+                )}
+            </div>
         </AbsoluteFill>
     );
 };

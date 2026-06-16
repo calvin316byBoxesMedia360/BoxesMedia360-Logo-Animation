@@ -620,6 +620,31 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                     </p>
                 </div>
 
+                {/* 🆕 ROTATION SELECTOR (Sólo visible en vertical) */}
+                {props.orientation === 'vertical' && (
+                    <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-white/30">
+                                <RotateCcw size={14} className="text-amber-500" />
+                                <span className="text-[9px] font-black uppercase">Rotación de Salida</span>
+                            </div>
+                            <button
+                                onClick={() => setProps((prev) => ({ ...prev, rotation: prev.rotation === 'left' ? 'none' : 'left' }))}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                                    props.rotation === 'left'
+                                        ? 'bg-amber-500 text-black border-amber-400'
+                                        : 'bg-black/30 text-white/40 border-white/10 hover:text-white/60'
+                                }`}
+                            >
+                                {props.rotation === 'left' ? 'Rotado -90° (H_1920x1080)' : 'Sin Rotar (V_1080x1920)'}
+                            </button>
+                        </div>
+                        <p className="text-[9px] text-white/35 leading-relaxed">
+                            Rotación para pantallas montadas físicamente verticales. Genera un video horizontal rotado.
+                        </p>
+                    </div>
+                )}
+
                 {/* 🆕 EXTRA VISUAL EFFECTS SELECTOR */}
                 <div className="grid grid-cols-2 gap-4">
                     <button

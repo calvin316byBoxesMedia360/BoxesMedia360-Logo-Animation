@@ -94,8 +94,9 @@ export const RemotionRoot: React.FC = () => {
 
   // Determinar la orientación dinámica
   const isVertical = inputProps?.orientation === 'vertical' || (!hasValidProps && sampleMenuData.orientation === 'vertical');
-  const currentWidth = isVertical ? 1080 : 1920;
-  const currentHeight = isVertical ? 1920 : 1080;
+  const isRotated = isVertical && inputProps?.rotation === 'left';
+  const currentWidth = isVertical && !isRotated ? 1080 : 1920;
+  const currentHeight = isVertical && !isRotated ? 1920 : 1080;
 
   return (
     <>

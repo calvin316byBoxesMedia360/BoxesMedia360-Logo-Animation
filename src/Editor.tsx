@@ -245,7 +245,7 @@ export const Editor: React.FC = () => {
 
                 {/* Player Section */}
                 <section className={`flex-1 bg-[#111] p-4 lg:p-12 flex flex-col items-center justify-center overflow-y-auto ${activeTab === 'video' ? 'flex' : 'hidden lg:flex'}`}>
-                    <div className={props.orientation === 'vertical' 
+                    <div className={props.orientation === 'vertical' && props.rotation !== 'left'
                         ? "w-full max-w-[400px] aspect-[9/16] h-[75vh] max-h-[720px] bg-black rounded-[2.5rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.6)] ring-1 ring-white/10 relative group shrink-0" 
                         : "w-full max-w-5xl aspect-video bg-black rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] ring-1 ring-white/10 relative group shrink-0"
                     }>
@@ -257,8 +257,8 @@ export const Editor: React.FC = () => {
                             } as any}
                             durationInFrames={durationInFrames}
                             fps={30}
-                            compositionWidth={props.orientation === 'vertical' ? 1080 : 1920}
-                            compositionHeight={props.orientation === 'vertical' ? 1920 : 1080}
+                            compositionWidth={props.orientation === 'vertical' && props.rotation !== 'left' ? 1080 : 1920}
+                            compositionHeight={props.orientation === 'vertical' && props.rotation !== 'left' ? 1920 : 1080}
                             style={{ width: '100%', height: '100%' }}
                             controls
                             autoPlay
