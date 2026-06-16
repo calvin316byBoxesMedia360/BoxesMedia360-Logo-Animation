@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PremiumMenuProps, MenuItem } from '../compositions/PremiumMenu';
 import { saveMenuConfig, uploadMenuItemImage, uploadMenuItemVideo } from '../services/firebaseService';
-import { renderWithCloudRun } from '../services/cloudRunService';
+import { renderWithLocal } from '../services/localRenderService';
 import { triggerDownload } from '../utils/downloadUtils';
 import { auth } from '../services/firebaseConfig';
 import {
@@ -370,7 +370,7 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
         setVideoUrl(null);
         setRenderProgress('Iniciando...');
         try {
-            const result = await renderWithCloudRun(
+            const result = await renderWithLocal(
                 props,
                 '1080p',
                 (progress) => setRenderProgress(progress.message)
@@ -709,7 +709,7 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
 
                 {/* EXPORT SECTION */}
                 <div className="pt-10 border-t border-white/5 space-y-6">
-                    <div className="flex items-center gap-2 text-white/10 uppercase font-black text-[10px] tracking-[0.4em]">Producción Profesional ☁️ Cloud Run</div>
+                    <div className="flex items-center gap-2 text-white/10 uppercase font-black text-[10px] tracking-[0.4em]">Producción Profesional 🖥️ Render Local</div>
 
                     {/* VIDEO LISTO - Download Card */}
                     {videoUrl && (

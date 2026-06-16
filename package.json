@@ -9,6 +9,7 @@
     "@google-cloud/aiplatform": "^6.2.0",
     "@remotion/bundler": "4.0.419",
     "@remotion/cli": "4.0.419",
+    "@remotion/media": "4.0.419",
     "@remotion/player": "4.0.419",
     "@remotion/renderer": "4.0.419",
     "@remotion/tailwind-v4": "4.0.419",
@@ -47,5 +48,9 @@
   },
   "sideEffects": [
     "*.css"
-  ]
+  ],
+  "allowScripts": {
+    "esbuild@0.25.0": true,
+    "esbuild@0.27.3": true
+  }
 }

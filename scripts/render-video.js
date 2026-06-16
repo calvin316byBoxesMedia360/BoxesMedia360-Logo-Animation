@@ -8,14 +8,40 @@ const fs = require('fs');
  * Uso: node scripts/render-video.js
  */
 
+// Navegadores locales candidatos (Chrome primero por sus códecs H.264/AAC nativos, luego Edge)
+const BROWSER_CANDIDATES = [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+];
+
+/**
+ * Detecta dinámicamente el primer navegador local instalado.
+ * Permite override por variable de entorno REMOTION_CHROME_EXECUTABLE_PATH.
+ */
+function detectLocalBrowser() {
+    const override = process.env.REMOTION_CHROME_EXECUTABLE_PATH;
+    if (override && fs.existsSync(override)) return override;
+    return BROWSER_CANDIDATES.find((p) => fs.existsSync(p)) || null;
+}
+
 async function renderVideo(menuConfig) {
-    // BYPASS PARA ARM64 - Truco para engañar a Remotion y usar Edge nativo
-    try {
-        Object.defineProperty(process, 'arch', { value: 'x64' });
-    } catch (e) { }
-    const browserPath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
-    if (fs.existsSync(browserPath)) {
+    // BYPASS ARM64: solo necesario en equipos ARM (Snapdragon) para que Remotion
+    // acepte el navegador x64 nativo. En x64 NO debe aplicarse.
+    if (process.arch === 'arm64') {
+        try {
+            Object.defineProperty(process, 'arch', { value: 'x64' });
+            console.log('🔧 Bypass ARM64 aplicado (equipo ARM detectado)');
+        } catch (e) { }
+    }
+
+    const browserPath = detectLocalBrowser();
+    if (browserPath) {
         process.env.REMOTION_CHROME_EXECUTABLE_PATH = browserPath;
+        console.log(`🌐 Navegador local detectado: ${browserPath}`);
+    } else {
+        console.warn('⚠️  No se detectó Chrome/Edge local. Remotion usará su Chromium por defecto (puede fallar con códecs H.264).');
     }
 
     console.log('🎬 Iniciando renderizado de video...\n');
@@ -49,14 +75,15 @@ async function renderVideo(menuConfig) {
             codec: 'h264',
             outputLocation,
             inputProps: menuConfig,
-            browserExecutable: fs.existsSync(browserPath) ? browserPath : (process.env.REMOTION_PUPPETEER_EXECUTABLE_PATH || null),
+            browserExecutable: browserPath || process.env.REMOTION_PUPPETEER_EXECUTABLE_PATH || null,
             chromiumOptions: {
                 headless: 'shell',
                 args: ['--headless=new', '--no-sandbox', '--disable-setuid-sandbox'],
             },
-            onProgress: ({ renderedFrames, encodedFrames, totalFrames }) => {
-                const progress = Math.round((renderedFrames / totalFrames) * 100);
-                process.stdout.write(`\r   Progreso: ${progress}% (${renderedFrames}/${totalFrames} frames)`);
+            onProgress: ({ progress, renderedFrames }) => {
+                // Remotion 4.x expone `progress` (0..1) directamente.
+                const pct = Math.round((progress || 0) * 100);
+                process.stdout.write(`\r   Progreso: ${pct}% (${renderedFrames} frames)`);
             },
         });
 

@@ -1,166 +1,108 @@
-import {
-    collection,
-    doc,
-    setDoc,
-    getDoc,
-    getDocs,
-    query,
-    where,
-    serverTimestamp,
-    addDoc
-} from 'firebase/firestore';
-import {
-    ref,
-    uploadBytes,
-    getDownloadURL
-} from 'firebase/storage';
-import { db, storage } from './firebaseConfig';
 import { PremiumMenuProps } from '../compositions/PremiumMenu';
 
 /**
- * SERVICIO DE FIREBASE
- * Maneja la persistencia de menús y el alojamiento de videos
+ * SERVICIO DE PERSISTENCIA LOCAL
+ * (Antes usaba Firebase Firestore/Storage — ahora 100% local, sin nube.)
+ * - Configuración de menús → localStorage
+ * - Imágenes/videos de platillos → servidor local (public/uploads) vía /api/upload-asset
+ * Mantiene las mismas firmas para no romper los llamadores existentes.
  */
 
-// --- FIRESTORE: GESTIÓN DE MENÚS ---
+const LOCAL_SERVER = import.meta.env.VITE_LOCAL_RENDER_URL || 'http://localhost:3003';
+
+const menuKey = (userId: string) => `menu_studio_config_${userId || 'default'}`;
+const exportsKey = (userId: string) => `menu_studio_exports_${userId || 'default'}`;
+
+// --- PERSISTENCIA DE MENÚS (localStorage) ---
 
 /**
- * Guarda la configuración del menú en Firestore
- * @param userId ID del usuario (o restaurante)
- * @param menuProps Configuración del menú
+ * Guarda la configuración del menú en localStorage.
  */
 export async function saveMenuConfig(userId: string, menuProps: PremiumMenuProps) {
     try {
-        const menuRef = doc(db, 'menus', userId);
-        await setDoc(menuRef, {
-            ...menuProps,
-            updatedAt: serverTimestamp(),
-        }, { merge: true });
-        console.log('✅ Configuración guardada en Firestore');
+        localStorage.setItem(menuKey(userId), JSON.stringify(menuProps));
+        // Compatibilidad con la clave usada históricamente por MenuControls
+        localStorage.setItem('menu_studio_config', JSON.stringify(menuProps));
+        console.log('✅ Configuración guardada localmente');
     } catch (error) {
-        console.error('❌ Error guardando en Firestore:', error);
+        console.error('❌ Error guardando configuración local:', error);
         throw error;
     }
 }
 
 /**
- * Recupera la configuración del menú desde Firestore
- * @param userId ID del usuario (o restaurante)
+ * Recupera la configuración del menú desde localStorage.
  */
 export async function getMenuConfig(userId: string): Promise<PremiumMenuProps | null> {
     try {
-        const menuRef = doc(db, 'menus', userId);
-        const docSnap = await getDoc(menuRef);
-
-        if (docSnap.exists()) {
-            return docSnap.data() as PremiumMenuProps;
-        }
+        const raw = localStorage.getItem(menuKey(userId)) || localStorage.getItem('menu_studio_config');
+        return raw ? (JSON.parse(raw) as PremiumMenuProps) : null;
+    } catch (error) {
+        console.error('❌ Error recuperando configuración local:', error);
         return null;
-    } catch (error) {
-        console.error('❌ Error recuperando de Firestore:', error);
-        throw error;
     }
 }
 
-// --- STORAGE: GESTIÓN DE VIDEOS ---
+// --- SUBIDA DE ASSETS (servidor local) ---
 
 /**
- * Sube una imagen de platillo a Firebase Storage
- * @param userId ID del usuario
- * @param file Archivo Blob/File de la imagen
- * @param filename Nombre del archivo
+ * Sube un archivo (imagen/video) al servidor local y devuelve su URL local.
  */
-export async function uploadMenuItemImage(userId: string, file: Blob, filename: string): Promise<string> {
-    try {
-        const imageRef = ref(storage, `menus/${userId}/items/${Date.now()}_${filename}`);
-        const contentType = file.type || 'image/jpeg';
-        await uploadBytes(imageRef, file, { contentType });
-        const downloadUrl = await getDownloadURL(imageRef);
-        console.log('✅ Imagen subida exitosamente:', downloadUrl);
-        return downloadUrl;
-    } catch (error) {
-        console.error('❌ Error subiendo imagen a Storage:', error);
-        throw error;
+async function uploadAssetLocal(file: Blob, filename: string): Promise<string> {
+    const res = await fetch(`${LOCAL_SERVER}/api/upload-asset`, {
+        method: 'POST',
+        headers: {
+            'x-filename': filename,
+            'Content-Type': file.type || 'application/octet-stream',
+        },
+        body: file,
+    });
+    if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        throw new Error(`No se pudo subir el asset al servidor local (${res.status}). ${detail}`);
     }
+    const data = await res.json();
+    console.log('✅ Asset subido localmente:', data.url);
+    return data.url as string;
+}
+
+export async function uploadMenuItemImage(_userId: string, file: Blob, filename: string): Promise<string> {
+    return uploadAssetLocal(file, filename);
+}
+
+export async function uploadMenuItemVideo(_userId: string, file: Blob, filename: string): Promise<string> {
+    return uploadAssetLocal(file, filename);
+}
+
+// --- BANDEJA DE EXPORTACIONES (localStorage) ---
+
+export interface LocalExport {
+    id: string;
+    filename: string;
+    url: string;
+    status: 'completed' | 'rendering' | 'failed';
+    createdAt: number;
 }
 
 /**
- * Sube un clip de video de platillo a Firebase Storage
- * @param userId ID del usuario
- * @param file Archivo Blob/File del video
- * @param filename Nombre del archivo
+ * Registra una exportación local en la bandeja (localStorage).
  */
-export async function uploadMenuItemVideo(userId: string, file: Blob, filename: string): Promise<string> {
-    try {
-        const safeFilename = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-        const videoRef = ref(storage, `menus/${userId}/videos/${safeFilename}`);
-        // Detectar contentType real del archivo
-        const contentType = (file as File).type || 'video/mp4';
-        await uploadBytes(videoRef, file, { contentType });
-        const downloadUrl = await getDownloadURL(videoRef);
-        console.log('✅ Video de platillo subido exitosamente:', downloadUrl);
-        return downloadUrl;
-    } catch (error) {
-        console.error('❌ Error subiendo video de platillo a Storage:', error);
-        throw error;
-    }
-}
-
-
-/**
- * Sube un video MP4 a Firebase Storage y guarda sus metadatos
- * @param userId ID del usuario
- * @param file Archivo Blob/File del video
- * @param filename Nombre del archivo
- */
-export async function uploadVideo(userId: string, file: Blob, filename: string) {
-    try {
-        // 1. Subir a Storage
-        const videoRef = ref(storage, `videos/${userId}/${filename}`);
-        const contentType = file.type || 'video/mp4';
-        await uploadBytes(videoRef, file, { contentType });
-        const downloadUrl = await getDownloadURL(videoRef);
-
-        // 2. Guardar metadatos en Firestore
-        await addDoc(collection(db, 'exports'), {
-            userId,
-            filename,
-            url: downloadUrl,
-            status: 'completed',
-            createdAt: serverTimestamp(),
-        });
-
-        return downloadUrl;
-    } catch (error) {
-        console.error('❌ Error subiendo a Storage:', error);
-        throw error;
-    }
+export function addLocalExport(userId: string, exp: Omit<LocalExport, 'id' | 'createdAt'>): LocalExport[] {
+    const list = listLocalExports(userId);
+    const entry: LocalExport = { id: `${Date.now()}`, createdAt: Date.now(), ...exp };
+    const updated = [entry, ...list].slice(0, 20);
+    localStorage.setItem(exportsKey(userId), JSON.stringify(updated));
+    return updated;
 }
 
 /**
- * Lista los videos exportados del usuario
- * @param userId ID del usuario
+ * Lista las exportaciones locales del usuario (más recientes primero).
  */
-export async function listUserExports(userId: string) {
+export function listLocalExports(userId: string): LocalExport[] {
     try {
-        const q = query(
-            collection(db, 'exports'),
-            where('userId', '==', userId)
-        );
-        const querySnapshot = await getDocs(q);
-        const results = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })) as any[];
-
-        // Sort on client side to avoid missing index error
-        return results.sort((a, b) => {
-            const dateA = a.createdAt?.toMillis?.() || 0;
-            const dateB = b.createdAt?.toMillis?.() || 0;
-            return dateB - dateA;
-        });
-    } catch (error) {
-        console.error('❌ Error listando exportaciones:', error);
+        const raw = localStorage.getItem(exportsKey(userId));
+        return raw ? (JSON.parse(raw) as LocalExport[]) : [];
+    } catch {
         return [];
     }
 }

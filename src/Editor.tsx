@@ -3,11 +3,8 @@ import { Player } from '@remotion/player';
 import { PremiumMenu, MenuItem, PremiumMenuProps } from './compositions/PremiumMenu';
 import { MenuControls } from './components/MenuControls';
 import { Sparkles, Download, Loader2, User, Clock, Play } from 'lucide-react';
-import { getMenuConfig, saveMenuConfig, uploadMenuItemImage } from './services/firebaseService';
-import { auth, db } from './services/firebaseConfig';
-import { signInAnonymously } from 'firebase/auth';
-import { triggerRenderWorkflow } from './services/githubActionsService';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { getMenuConfig, saveMenuConfig, uploadMenuItemImage, addLocalExport, listLocalExports } from './services/firebaseService';
+import { renderWithLocal } from './services/localRenderService';
 import { triggerDownload } from './utils/downloadUtils';
 
 const DEFAULT_MENU_ITEMS: MenuItem[] = [
@@ -57,26 +54,12 @@ export const Editor: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'edit' | 'video'>('edit');
     const [recentExports, setRecentExports] = useState<any[]>([]);
 
-    // Cargar configuración inicial
+    // Cargar configuración inicial (localStorage, sin nube)
     React.useEffect(() => {
         const loadConfig = async () => {
             try {
-                // 0. Autenticación Anónima
-                try {
-                    await signInAnonymously(auth);
-                } catch (e) { }
-
-                // 1. Cargar LocalStorage
-                const saved = localStorage.getItem('menu_studio_config');
-                if (saved) {
-                    setProps(JSON.parse(saved));
-                }
-
-                // 2. Intentar Firestore
-                try {
-                    const cloudConfig = await getMenuConfig(DEFAULT_USER_ID);
-                    if (cloudConfig) setProps(cloudConfig);
-                } catch (e) { }
+                const cfg = await getMenuConfig(DEFAULT_USER_ID);
+                if (cfg) setProps(cfg);
             } catch (error) {
                 console.error('Error al cargar configuración:', error);
             } finally {
@@ -85,30 +68,22 @@ export const Editor: React.FC = () => {
         };
         loadConfig();
 
-        // 3. Escuchar exportaciones en tiempo real
-        const q = query(
-            collection(db, 'exports'),
-            where('userId', '==', DEFAULT_USER_ID),
-            orderBy('createdAt', 'desc')
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const exports = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setRecentExports(exports);
-        });
-
-        return () => unsubscribe();
+        // Cargar bandeja de exportaciones locales
+        setRecentExports(listLocalExports(DEFAULT_USER_ID));
     }, []);
+
+    // Persistir configuración en localStorage ante cualquier cambio
+    React.useEffect(() => {
+        if (isLoading) return;
+        saveMenuConfig(DEFAULT_USER_ID, props).catch(() => { });
+    }, [props, isLoading]);
 
     const handleExport = async () => {
         if (isExporting) return;
 
         setIsExporting(true);
         try {
-            // SOLUCIÓN ÓPTIMA: Auto-Sync de imágenes antes de exportar
+            // Auto-Sync de assets locales (blob:) → servidor local antes de renderizar
             const itemsToSync = props.menuItems.filter(item => item.image?.startsWith('blob:'));
 
             let updatedProps = { ...props };
@@ -132,24 +107,25 @@ export const Editor: React.FC = () => {
 
                 updatedProps = { ...props, menuItems: syncedItems };
                 setProps(updatedProps);
-                await saveMenuConfig(DEFAULT_USER_ID, updatedProps);
-            } else {
-                await saveMenuConfig(DEFAULT_USER_ID, props);
             }
+            await saveMenuConfig(DEFAULT_USER_ID, updatedProps);
 
             const filename = `menu-${props.restaurantName?.replace(/\s+/g, '-').toLowerCase() || 'premium'}-${Date.now()}.mp4`;
 
-            // Disparar Render en la Nube (GitHub Actions)
-            await triggerRenderWorkflow({
-                menuConfig: updatedProps,
-                filename: filename
-            });
+            // Render LOCAL en el equipo (Asus ROG) — sin nube
+            const result = await renderWithLocal(updatedProps, '1080p');
 
-            alert(`🚀 ¡Video en camino!\n\nSe está renderizando un video de alta calidad.\n\nPodrás ver el enlace de descarga en la "Bandeja de Salida" de la sección Video cuando esté listo.`);
+            const updatedExports = addLocalExport(DEFAULT_USER_ID, {
+                filename: result.filename || filename,
+                url: result.videoUrl,
+                status: 'completed',
+            });
+            setRecentExports(updatedExports);
+            setActiveTab('video');
 
         } catch (error: any) {
             console.error('Error al exportar:', error);
-            alert(`Error al exportar: ${error.message || 'Error desconocido'}`);
+            alert(`Error al renderizar localmente: ${error.message || 'Error desconocido'}`);
         } finally {
             setIsExporting(false);
         }
@@ -234,7 +210,7 @@ export const Editor: React.FC = () => {
                 {isLoading && (
                     <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
                         <Loader2 className="w-10 h-10 text-amber-500 animate-spin mb-4" />
-                        <p className="text-amber-500 font-bold animate-pulse text-xs uppercase tracking-widest">Sincronizando con la Nube...</p>
+                        <p className="text-amber-500 font-bold animate-pulse text-xs uppercase tracking-widest">Cargando configuración local...</p>
                     </div>
                 )}
 
@@ -297,7 +273,7 @@ export const Editor: React.FC = () => {
                                                         {exp.status === 'completed' ? 'LISTO' : 'PROCESANDO...'}
                                                     </span>
                                                     <span className="text-[9px] text-white/20">•</span>
-                                                    <span className="text-[9px] text-white/20">{exp.createdAt?.toDate ? exp.createdAt.toDate().toLocaleTimeString() : 'Recién'}</span>
+                                                    <span className="text-[9px] text-white/20">{exp.createdAt ? new Date(exp.createdAt).toLocaleTimeString() : 'Recién'}</span>
                                                 </div>
                                             </div>
                                         </div>
