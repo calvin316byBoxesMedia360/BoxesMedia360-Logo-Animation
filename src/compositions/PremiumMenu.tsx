@@ -31,6 +31,7 @@ export interface PremiumMenuProps {
     darkOverlayEnabled?: boolean;
     motionEnabled?: boolean;
     mediaPadding?: number;
+    mediaFit?: 'cover' | 'contain';
     rotation?: 'none' | 'left';
     isRendering?: boolean;
     [key: string]: any;
@@ -129,6 +130,7 @@ interface DishSceneProps {
     darkOverlayEnabled?: boolean;
     motionEnabled?: boolean;
     mediaPadding?: number;
+    mediaFit?: 'cover' | 'contain';
     isRendering?: boolean;
     showTextElements?: boolean;
 }
@@ -145,6 +147,7 @@ const DishScene: React.FC<DishSceneProps> = ({
     darkOverlayEnabled = true,
     motionEnabled = true,
     mediaPadding = 0,
+    mediaFit = 'cover',
     isRendering = false,
     showTextElements = true,
 }) => {
@@ -470,6 +473,28 @@ const DishScene: React.FC<DishSceneProps> = ({
         vividPop:     `0 0 16px ${accentColor}77`,
     } as Record<string, string>)[mode];
 
+    // 'cover' (por defecto): el medio llena toda la ventana de exportación, sin márgenes.
+    // 'contain': muestra el medio completo y rellena el sobrante con el fondo desenfocado (Smart Blurred Fit).
+    const isCover = mediaFit !== 'contain';
+    const mediaFitStyle: React.CSSProperties = isCover
+        ? {
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            filter: mediaFilter,
+            transform: `scale(${foregroundScale})`,
+        }
+        : {
+            maxWidth: '100%',
+            maxHeight: '100%',
+            width: 'auto',
+            height: 'auto',
+            objectFit: 'contain',
+            filter: mediaFilter,
+            transform: `scale(${foregroundScale})`,
+            clipPath: 'inset(5px 2px)',
+        };
+
     return (
         <AbsoluteFill style={{ opacity, backgroundColor: 'black' }}>
             <div style={{ 
@@ -478,31 +503,33 @@ const DishScene: React.FC<DishSceneProps> = ({
                 overflow: 'hidden',
                 backgroundColor: 'black'
             }}>
-                {/* 1. Capa de Fondo (Blurred Cover): Llena toda la pantalla con desenfoque estético */}
-                <div style={{
-                    position: 'absolute',
-                    inset: -20, // Sobresale para evitar bordes blancos causados por el blur
-                    overflow: 'hidden',
-                    filter: `${mediaFilter || ''} blur(25px) brightness(0.45)`,
-                    transform: `scale(${scale * 1.15}) translateY(${translateY}px)`,
-                    opacity: 0.85
-                }}>
-                    {isVideo ? (
-                        <Video
-                            src={mediaSrc}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            muted
-                            loop
-                        />
-                    ) : (
-                        <Img
-                            src={mediaSrc}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                    )}
-                </div>
+                {/* 1. Capa de Fondo (Blurred Cover): SOLO en modo 'contain', rellena el sobrante con desenfoque */}
+                {!isCover && (
+                    <div style={{
+                        position: 'absolute',
+                        inset: -20, // Sobresale para evitar bordes blancos causados por el blur
+                        overflow: 'hidden',
+                        filter: `${mediaFilter || ''} blur(25px) brightness(0.45)`,
+                        transform: `scale(${scale * 1.15}) translateY(${translateY}px)`,
+                        opacity: 0.85
+                    }}>
+                        {isVideo ? (
+                            <Video
+                                src={mediaSrc}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                muted
+                                loop
+                            />
+                        ) : (
+                            <Img
+                                src={mediaSrc}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                        )}
+                    </div>
+                )}
 
-                {/* 2. Capa Principal (Foreground): Ajuste 'contain' para mostrar la imagen completa */}
+                {/* 2. Capa Principal (Foreground): 'cover' llena la ventana completa; 'contain' muestra el medio entero */}
                 <div style={{
                     position: 'absolute',
                     inset: 0,
@@ -516,16 +543,7 @@ const DishScene: React.FC<DishSceneProps> = ({
                             <RemotionMediaVideo
                                 src={mediaSrc}
                                 onError={(() => setImgError(true)) as any}
-                                style={{
-                                    maxWidth: '100%',
-                                    maxHeight: '100%',
-                                    width: 'auto',
-                                    height: 'auto',
-                                    objectFit: 'contain',
-                                    filter: mediaFilter,
-                                    transform: `scale(${foregroundScale})`,
-                                    clipPath: 'inset(5px 2px)',
-                                }}
+                                style={mediaFitStyle}
                                 muted
                                 loop
                             />
@@ -533,16 +551,7 @@ const DishScene: React.FC<DishSceneProps> = ({
                             <Video
                                 src={mediaSrc}
                                 onError={() => setImgError(true)}
-                                style={{
-                                    maxWidth: '100%',
-                                    maxHeight: '100%',
-                                    width: 'auto',
-                                    height: 'auto',
-                                    objectFit: 'contain',
-                                    filter: mediaFilter,
-                                    transform: `scale(${foregroundScale})`,
-                                    clipPath: 'inset(5px 2px)',
-                                }}
+                                style={mediaFitStyle}
                                 muted
                                 loop
                             />
@@ -551,16 +560,7 @@ const DishScene: React.FC<DishSceneProps> = ({
                         <Img
                             src={mediaSrc}
                             onError={() => setImgError(true)}
-                            style={{
-                                maxWidth: '100%',
-                                maxHeight: '100%',
-                                width: 'auto',
-                                height: 'auto',
-                                objectFit: 'contain',
-                                filter: mediaFilter,
-                                transform: `scale(${foregroundScale})`,
-                                clipPath: 'inset(5px 2px)',
-                            }}
+                            style={mediaFitStyle}
                         />
                     )}
                 </div>
@@ -731,6 +731,7 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     darkOverlayEnabled = true,
     motionEnabled = true,
     mediaPadding = 0,
+    mediaFit = 'cover',
     rotation = 'none',
     isRendering = false,
     showTextElements = true,
@@ -842,6 +843,7 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
                             darkOverlayEnabled={darkOverlayEnabled}
                             motionEnabled={motionEnabled}
                             mediaPadding={mediaPadding}
+                            mediaFit={mediaFit}
                             isRendering={isRendering}
                             showTextElements={showTextElements}
                         />

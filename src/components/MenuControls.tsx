@@ -620,6 +620,44 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                     </p>
                 </div>
 
+                {/* 🆕 MEDIA FIT SELECTOR (Llenar vs Completa) */}
+                <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-white/30">
+                            <Film size={14} className="text-amber-500" />
+                            <span className="text-[9px] font-black uppercase">Ajuste de Medios</span>
+                        </div>
+                        <div className="flex gap-1">
+                            <button
+                                onClick={() => setProps((prev) => ({ ...prev, mediaFit: 'cover' }))}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                                    (props.mediaFit ?? 'cover') !== 'contain'
+                                        ? 'bg-amber-500 text-black border-amber-400'
+                                        : 'bg-black/30 text-white/40 border-white/10 hover:text-white/60'
+                                }`}
+                            >
+                                Llenar
+                            </button>
+                            <button
+                                onClick={() => setProps((prev) => ({ ...prev, mediaFit: 'contain' }))}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border transition-all ${
+                                    props.mediaFit === 'contain'
+                                        ? 'bg-amber-500 text-black border-amber-400'
+                                        : 'bg-black/30 text-white/40 border-white/10 hover:text-white/60'
+                                }`}
+                            >
+                                Completa
+                            </button>
+                        </div>
+                    </div>
+                    <p className="text-[9px] text-white/35 leading-relaxed">
+                        {props.mediaFit === 'contain'
+                            ? 'Completa: muestra la imagen/video entero y rellena el sobrante con un fondo desenfocado (evita recortes en logos).'
+                            : 'Llenar: la imagen/video ocupa toda la ventana sin márgenes (puede recortar los bordes).'
+                        }
+                    </p>
+                </div>
+
                 {/* 🆕 ROTATION SELECTOR (Sólo visible en vertical) */}
                 {props.orientation === 'vertical' && (
                     <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
