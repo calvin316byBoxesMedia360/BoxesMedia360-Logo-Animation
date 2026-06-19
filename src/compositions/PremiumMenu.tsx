@@ -15,6 +15,7 @@ export interface MenuItem {
     fontSizeMode?: 'normal' | 'medium' | 'large';
     uploadError?: boolean;
     showCurrencySymbol?: boolean; // Mostrar/ocultar símbolo $ en el video
+    mediaFit?: 'auto' | 'cover' | 'contain'; // 'auto' = hereda el ajuste global del menú
 }
 
 export interface PremiumMenuProps {
@@ -473,9 +474,12 @@ const DishScene: React.FC<DishSceneProps> = ({
         vividPop:     `0 0 16px ${accentColor}77`,
     } as Record<string, string>)[mode];
 
+    // Ajuste efectivo: si el plato define su propio mediaFit (distinto de 'auto') manda ese;
+    // si no, hereda el ajuste global del menú.
     // 'cover' (por defecto): el medio llena toda la ventana de exportación, sin márgenes.
     // 'contain': muestra el medio completo y rellena el sobrante con el fondo desenfocado (Smart Blurred Fit).
-    const isCover = mediaFit !== 'contain';
+    const effectiveFit = (item.mediaFit && item.mediaFit !== 'auto') ? item.mediaFit : mediaFit;
+    const isCover = effectiveFit !== 'contain';
     const mediaFitStyle: React.CSSProperties = isCover
         ? {
             width: '100%',

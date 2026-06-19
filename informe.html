@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIGITAL_MENU_STUDIO :: BUILD_REPORT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+:root{
+  --g0:#000a00;--g1:#001200;--g2:#001a00;--g3:#002800;
+  --gp:#00ff41;--gd:#00cc33;--gm:#008822;--gx:#004410;
+  --gdim:#003311;--glow1:rgba(0,255,65,0.4);--glow2:rgba(0,255,65,0.15);--glow3:rgba(0,255,65,0.06);
+  --border:rgba(0,255,65,0.18);--border2:rgba(0,255,65,0.08);--glass:rgba(0,18,0,0.65);
+  --scan:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'JetBrains Mono',monospace;background:var(--g0);color:var(--gp);min-height:100vh;overflow-x:hidden;}
+#matrix-rain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;opacity:.18;}
+body::before{content:'';position:fixed;inset:0;background:var(--scan);pointer-events:none;z-index:9998;opacity:.6;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,60,10,.4) 0%,transparent 70%);pointer-events:none;z-index:0;}
+header{position:relative;z-index:10;background:var(--glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);box-shadow:0 0 40px var(--glow2),inset 0 -1px 0 var(--border);}
+.term-titlebar{display:flex;align-items:center;gap:.75rem;padding:.6rem 1.5rem;border-bottom:1px solid var(--border2);background:rgba(0,255,65,.04);}
+.term-dots{display:flex;gap:.4rem;}.term-dot{width:10px;height:10px;border-radius:50%;border:1px solid;}
+.term-dot.r{background:rgba(0,255,65,.15);border-color:rgba(0,255,65,.4);}.term-dot.y{background:rgba(0,255,65,.25);border-color:rgba(0,255,65,.5);}
+.term-dot.g{background:rgba(0,255,65,.5);border-color:var(--gp);box-shadow:0 0 6px var(--glow1);}
+.term-title{font-size:.72rem;color:var(--gm);letter-spacing:2px;flex:1;text-align:center;}.term-time{font-size:.68rem;color:var(--gdim);}
+.header-body{padding:2rem 1.5rem 1.5rem;text-align:center;}
+.header-label{display:inline-block;font-size:.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--gm);border:1px solid var(--gdim);padding:3px 14px;border-radius:2px;margin-bottom:1rem;text-shadow:0 0 8px var(--glow1);}
+header h1{font-size:clamp(1.2rem,3vw,2rem);font-weight:700;color:var(--gp);letter-spacing:1px;text-shadow:0 0 20px var(--glow1),0 0 40px var(--glow2);margin-bottom:.4rem;}
+header h1 span{color:var(--gm);}
+.cursor{display:inline-block;width:2px;height:1.2em;background:var(--gp);vertical-align:middle;margin-left:4px;animation:blink .8s step-end infinite;box-shadow:0 0 6px var(--gp);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.header-sub{font-size:.78rem;color:var(--gm);margin-bottom:1rem;}
+.header-meta{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;font-size:.7rem;}
+.header-meta .kv{color:var(--gdim);}.header-meta .kv strong{color:var(--gp);}
+.live-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(0,255,65,.06);border:1px solid rgba(0,255,65,.25);color:var(--gp);padding:3px 12px;border-radius:2px;font-size:.68rem;font-weight:700;letter-spacing:1px;box-shadow:0 0 10px var(--glow2);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--gp);box-shadow:0 0 6px var(--gp);animation:pulse 1.2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.tab-nav{display:flex;gap:0;background:rgba(0,10,0,.8);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:0 1rem;overflow-x:auto;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+.tab-btn{padding:.65rem 1.1rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:500;color:var(--gdim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;letter-spacing:.5px;transition:all .2s;}
+.tab-btn:hover{color:var(--gm);background:rgba(0,255,65,.03);}
+.tab-btn.active{color:var(--gp);border-bottom-color:var(--gp);background:rgba(0,255,65,.05);text-shadow:0 0 8px var(--glow1);}
+.tab-content{display:none;}.tab-content.active{display:block;}
+.container{max-width:1100px;margin:0 auto;padding:1.5rem;position:relative;z-index:1;}
+.section{margin-bottom:2rem;}
+.section-title{font-size:.62rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gm);display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;}
+.section-title::before{content:'//';color:var(--gdim);}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+.card{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:4px;padding:1.25rem;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 1px var(--border),inset 0 1px 0 rgba(0,255,65,.06);position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,65,.3),transparent);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+@media(max-width:700px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+.metric{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:4px;padding:1.1rem;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.4);position:relative;overflow:hidden;transition:box-shadow .3s;}
+.metric:hover{box-shadow:0 4px 24px var(--glow2),0 0 0 1px var(--border);}
+.metric-value{font-size:1.5rem;font-weight:700;display:block;color:var(--gp);text-shadow:0 0 10px var(--glow1);line-height:1.1;}
+.metric-label{font-size:.6rem;color:var(--gm);margin-top:.2rem;letter-spacing:1px;text-transform:uppercase;}
+.spec-row{display:flex;justify-content:space-between;font-size:.78rem;padding:.32rem 0;border-bottom:1px solid var(--border2);gap:1rem;}
+.spec-row:last-child{border-bottom:none;}.spec-row .label{color:var(--gm);}.spec-row .value{color:var(--gp);text-align:right;}
+.term-table{width:100%;border-collapse:collapse;font-size:.74rem;}
+.term-table th{text-align:left;padding:.45rem .7rem;background:rgba(0,255,65,.05);color:var(--gm);font-weight:700;font-size:.62rem;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);}
+.term-table td{padding:.5rem .7rem;border-bottom:1px solid var(--border2);vertical-align:top;color:var(--gm);}
+.term-table tr:last-child td{border-bottom:none;}.term-table tr:hover td{background:rgba(0,255,65,.03);}
+.code{font-family:'JetBrains Mono',monospace;background:rgba(0,255,65,.06);color:var(--gp);padding:1px 7px;border-radius:2px;border:1px solid var(--border);}
+.changelog{border-left:2px solid var(--border2);padding-left:1rem;margin-bottom:1.25rem;}
+.changelog.recent{border-color:rgba(0,255,65,.4);box-shadow:-2px 0 8px rgba(0,255,65,.1);}
+.cl-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;flex-wrap:wrap;}
+.cl-version{font-size:.62rem;font-weight:700;padding:2px 10px;border-radius:2px;letter-spacing:1px;}
+.cl-version.new{background:rgba(0,255,65,.1);color:var(--gp);border:1px solid rgba(0,255,65,.3);box-shadow:0 0 8px var(--glow3);}
+.cl-version.old{background:rgba(0,255,65,.03);color:var(--gm);border:1px solid var(--border2);}
+.cl-date{font-size:.68rem;color:var(--gdim);}
+.cl-items{list-style:none;}.cl-items li{font-size:.78rem;padding:.22rem 0;border-bottom:1px solid var(--border2);display:flex;gap:.5rem;color:var(--gm);}
+.cl-items li:last-child{border-bottom:none;}.cl-items li span{font-size:.7rem;color:var(--gp);flex-shrink:0;margin-top:1px;}
+.timeline{position:relative;padding-left:2rem;}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:1px;background:linear-gradient(180deg,var(--border),transparent);}
+.tl-item{position:relative;margin-bottom:1.1rem;}
+.tl-item::before{content:'';position:absolute;left:-1.65rem;top:5px;width:9px;height:9px;border-radius:50%;border:1px solid var(--gp);background:var(--gd);box-shadow:0 0 8px var(--glow2);}
+.tl-time{font-size:.62rem;color:var(--gdim);margin-bottom:.1rem;letter-spacing:.5px;}
+.tl-title{font-size:.82rem;font-weight:600;color:var(--gp);}
+.tl-desc{font-size:.72rem;color:var(--gm);margin-top:.15rem;line-height:1.5;}
+.tag{display:inline-block;padding:0 7px;border-radius:2px;font-size:.58rem;font-weight:700;letter-spacing:.5px;margin-left:.4rem;background:rgba(0,255,65,.1);color:var(--gp);border:1px solid rgba(0,255,65,.2);}
+.info-box{padding:.65rem 1rem;border-radius:2px;font-size:.76rem;line-height:1.5;background:rgba(0,255,65,.04);border:1px solid rgba(0,255,65,.15);color:var(--gm);}
+.info-box .gp{color:var(--gp);}
+pre{background:rgba(0,8,0,.8);border:1px solid var(--border);border-radius:4px;padding:.9rem 1.1rem;font-size:.72rem;overflow-x:auto;color:var(--gp);line-height:1.6;}
+footer{background:rgba(0,10,0,.8);backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:1.1rem 2rem;text-align:center;font-size:.68rem;color:var(--gdim);position:relative;z-index:10;margin-top:2rem;}
+footer strong{color:var(--gm);}
+.corner-tl{position:absolute;top:0;left:0;width:16px;height:16px;border-top:1px solid var(--gp);border-left:1px solid var(--gp);}
+.corner-tr{position:absolute;top:0;right:0;width:16px;height:16px;border-top:1px solid var(--gp);border-right:1px solid var(--gp);}
+.check{color:var(--gp);text-shadow:0 0 6px var(--glow2);}.pend{color:var(--gdim);}
+/* 3D chart */
+.chart3d-wrap{position:relative;height:480px;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:radial-gradient(ellipse at 50% 120%,rgba(0,40,8,.5),rgba(0,5,0,.9));box-shadow:inset 0 0 60px rgba(0,0,0,.6),0 8px 32px rgba(0,0,0,.5);}
+#chart3d{width:100%;height:100%;display:block;}
+.chart3d-hint{position:absolute;bottom:8px;left:12px;font-size:.58rem;color:var(--gm);letter-spacing:.5px;z-index:2;pointer-events:none;}
+.chart3d-corner{position:absolute;top:8px;right:12px;font-size:.58rem;color:var(--gd);letter-spacing:1px;z-index:2;pointer-events:none;text-shadow:0 0 6px var(--glow2);}
+.flow{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.7rem;}
+.flow .node{background:rgba(0,255,65,.06);border:1px solid var(--border);border-radius:3px;padding:.45rem .7rem;color:var(--gp);}
+.flow .arrow{color:var(--gd);}
+.badge-rm{display:inline-block;font-size:.55rem;padding:0 6px;border-radius:2px;background:rgba(0,255,65,.08);border:1px solid var(--border);color:var(--gd);margin-left:.3rem;}
+</style>
+</head>
+<body>
+<canvas id="matrix-rain"></canvas>
+
+<header>
+  <div class="term-titlebar">
+    <div class="term-dots"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div></div>
+    <span class="term-title">VIDEOSTUDIO_OS :: DIGITAL_MENU_STUDIO :: BoxesMedia360</span>
+    <span class="term-time" id="clock"></span>
+  </div>
+  <div class="header-body">
+    <div class="header-label">// INFORME DE PROYECTO · RENDER LOCAL //</div>
+    <h1>DIGITAL <span>MENU</span> STUDIO<span class="cursor"></span></h1>
+    <p class="header-sub">Generador de videos de menús digitales (Remotion) · render 100% local en la ROG · sin nube</p>
+    <div class="header-meta">
+      <span class="kv">ENGINE: <strong>Remotion 4.0.419</strong></span>
+      <span class="kv">RAMA: <strong>sandbox/reverse-engineering</strong></span>
+      <span class="kv">RENDER: <strong>H.264 · local :3003</strong></span>
+      <span class="kv"><span class="live-badge"><span class="live-dot"></span>100% LOCAL</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="tab('status',this)">[ STATUS ]</button>
+  <button class="tab-btn" onclick="tab('metricas',this)">[ MÉTRICAS 3D ]</button>
+  <button class="tab-btn" onclick="tab('pipeline',this)">[ PIPELINE LOCAL ]</button>
+  <button class="tab-btn" onclick="tab('arq',this)">[ ARQUITECTURA ]</button>
+  <button class="tab-btn" onclick="tab('errores',this)">[ ERRORES & FIXES ]</button>
+  <button class="tab-btn" onclick="tab('changelog',this)">[ CHANGELOG ]</button>
+</div>
+
+<!-- STATUS -->
+<div id="t-status" class="tab-content active"><div class="container">
+  <section class="section">
+    <div class="section-title">SYSTEM_METRICS</div>
+    <div class="grid-4">
+      <div class="metric"><span class="metric-value">36</span><span class="metric-label">Commits</span></div>
+      <div class="metric"><span class="metric-value">12</span><span class="metric-label">Componentes Remotion</span></div>
+      <div class="metric"><span class="metric-value">13</span><span class="metric-label">Servicios TS</span></div>
+      <div class="metric"><span class="metric-value">27</span><span class="metric-label">Dependencias</span></div>
+    </div>
+    <div class="grid-4" style="margin-top:.75rem;">
+      <div class="metric"><span class="metric-value">2</span><span class="metric-label">Renders MP4</span></div>
+      <div class="metric"><span class="metric-value">13 MB</span><span class="metric-label">Video producido</span></div>
+      <div class="metric"><span class="metric-value">1920×1080</span><span class="metric-label">Resolución final</span></div>
+      <div class="metric"><span class="metric-value">3003</span><span class="metric-label">Puerto render local</span></div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-title">DESCRIPCIÓN GENERAL</div>
+    <div class="info-box"><span class="gp">&gt;&gt;</span> <b>Digital Menu Studio</b> (codename interno <span class="code">VIDEOSTUDIO_OS</span>) genera <b>menús digitales animados en video</b> para proyectar en Smart TVs (vertical u horizontal) de locales comerciales. Renderiza con <b>Remotion</b> (React → frames → H.264 vía Chromium headless). Migrado de la nube (Firebase + Cloud Run) a <b>render 100% local</b> en la Asus ROG.</div>
+  </section>
+  <section class="section">
+    <div class="section-title">ESTADO DE COMPONENTES</div>
+    <div class="card"><div class="corner-tl"></div><div class="corner-tr"></div>
+      <div class="spec-row"><span class="label">Motor de render (Remotion + Chromium)</span><span class="value check">✓ OPERATIVO</span></div>
+      <div class="spec-row"><span class="label">Backend local Express (/api/render-local :3003)</span><span class="value check">✓ OPERATIVO</span></div>
+      <div class="spec-row"><span class="label">Editor (Vite dashboard) + persistencia localStorage</span><span class="value check">✓ OPERATIVO</span></div>
+      <div class="spec-row"><span class="label">Bypass de códecs Chrome/Edge (H.264 local)</span><span class="value check">✓ RESUELTO</span></div>
+      <div class="spec-row"><span class="label">Rotación 90° para pantalla vertical física</span><span class="value check">✓ RESUELTO</span></div>
+      <div class="spec-row"><span class="label">Persistencia/assets en la nube (Firebase)</span><span class="value">⟳ EN RETIRO (→ local)</span></div>
+      <div class="spec-row"><span class="label">Repositorio GitHub renombrado a Digital-Menu-Studio</span><span class="value check">✓ HECHO</span></div>
+    </div>
+  </section>
+</div></div>
+
+<!-- MÉTRICAS 3D -->
+<div id="t-metricas" class="tab-content"><div class="container">
+  <section class="section">
+    <div class="section-title">MÉTRICAS DEL PROYECTO · VISTA 3D</div>
+    <div class="chart3d-wrap">
+      <canvas id="chart3d"></canvas>
+      <div class="chart3d-corner">WEBGL · THREE.JS · BLOOM</div>
+      <div class="chart3d-hint">▮ arrastra para rotar · rueda para zoom · auto-giro activo</div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-title">DATOS DE LA GRÁFICA</div>
+    <div class="card">
+      <table class="term-table">
+        <tr><th>Métrica</th><th>Valor</th><th>Detalle</th></tr>
+        <tr><td>Commits</td><td>36</td><td>historial total en la rama de trabajo</td></tr>
+        <tr><td>Componentes Remotion</td><td>12</td><td>PremiumMenu, BoxesMediaLogo, HolographicParticles v1/v2, VeoTransition, BiblicalScenes, Editor, Root…</td></tr>
+        <tr><td>Servicios TS</td><td>13</td><td>localRenderService, firebaseService (reimplementado local), render, etc.</td></tr>
+        <tr><td>Dependencias</td><td>27</td><td>17 producción + 10 desarrollo</td></tr>
+        <tr><td>Ramas</td><td>5</td><td>activa: sandbox/reverse-engineering</td></tr>
+        <tr><td>Fases de migración</td><td>4</td><td>Blurred Fit · Inset/Fringes · Rotación −90° · Bypass códecs</td></tr>
+      </table>
+    </div>
+  </section>
+</div></div>
+
+<!-- PIPELINE LOCAL -->
+<div id="t-pipeline" class="tab-content"><div class="container">
+  <section class="section">
+    <div class="section-title">MIGRACIÓN: NUBE → LOCAL</div>
+    <div class="grid-2">
+      <div class="card"><div class="cl-header"><span class="cl-version old">ANTES · NUBE</span></div>
+        <div class="spec-row"><span class="label">Render</span><span class="value">Google Cloud Run</span></div>
+        <div class="spec-row"><span class="label">Config menú</span><span class="value">Firestore</span></div>
+        <div class="spec-row"><span class="label">Assets</span><span class="value">Firebase Storage</span></div>
+        <div class="spec-row"><span class="label">Auth</span><span class="value">anónima (Firebase)</span></div>
+        <div class="spec-row"><span class="label">Dependía de</span><span class="value">internet + cuotas cloud</span></div>
+      </div>
+      <div class="card"><div class="cl-header"><span class="cl-version new">AHORA · LOCAL</span></div>
+        <div class="spec-row"><span class="label">Render</span><span class="value check">Express local :3003</span></div>
+        <div class="spec-row"><span class="label">Config menú</span><span class="value check">localStorage</span></div>
+        <div class="spec-row"><span class="label">Assets</span><span class="value check">public/uploads</span></div>
+        <div class="spec-row"><span class="label">Auth</span><span class="value check">no requerida (offline)</span></div>
+        <div class="spec-row"><span class="label">Salida</span><span class="value check">MP4 en out/ → /videos</span></div>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-title">FLUJO DE RENDER LOCAL</div>
+    <div class="card">
+      <div class="flow">
+        <span class="node">Editor (Vite)</span><span class="arrow">→</span>
+        <span class="node">localRenderService.renderWithLocal()</span><span class="arrow">→</span>
+        <span class="node">POST :3003/api/render-local</span><span class="arrow">→</span>
+        <span class="node">scripts/render-video.js</span><span class="arrow">→</span>
+        <span class="node">Chromium headless (Chrome/Edge)<span class="badge-rm">H.264</span></span><span class="arrow">→</span>
+        <span class="node">out/menu-*.mp4</span><span class="arrow">→</span>
+        <span class="node">/videos</span>
+      </div>
+      <div class="info-box" style="margin-top:1rem;"><span class="gp">&gt;&gt;</span> El render programático usa Remotion: genera composiciones HTML/React y las captura <b>frame por frame</b> con Chromium headless para producir el video H.264. El backend Express gestiona la petición y sirve el MP4 sin subir a la nube.</div>
+    </div>
+  </section>
+</div></div>
+
+<!-- ARQUITECTURA -->
+<div id="t-arq" class="tab-content"><div class="container">
+  <section class="section">
+    <div class="section-title">STACK TÉCNICO</div>
+    <div class="card">
+      <table class="term-table">
+        <tr><th>Capa</th><th>Tecnología</th><th>Rol</th></tr>
+        <tr><td>Motor de video</td><td>Remotion 4.0.419 (+ Player, Bundler, Renderer)</td><td>React → frames → MP4</td></tr>
+        <tr><td>UI / Editor</td><td>React 19 + Vite 7 + Tailwind v4</td><td>editor del menú + dashboard</td></tr>
+        <tr><td>Backend render</td><td>Express 5 (server.js · 207 LOC)</td><td>/api/render-local + sirve /videos</td></tr>
+        <tr><td>Render headless</td><td>Puppeteer + Chrome/Edge local</td><td>captura H.264/AAC nativa Windows</td></tr>
+        <tr><td>Persistencia</td><td>localStorage + public/uploads</td><td>config + assets (reemplazan Firebase)</td></tr>
+        <tr><td>Legacy (en retiro)</td><td>Firebase / Firebase Admin</td><td>config inicial; se está eliminando</td></tr>
+      </table>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-title">COMPONENTES CLAVE</div>
+    <div class="card"><pre>src/
+  Root.tsx                 # registro de composiciones + resolución dinámica 1920x1080
+  Editor.tsx               # editor del menú (persistencia local)
+  components/MenuControls.tsx   # controles + export local + rotación condicional
+  compositions/
+    PremiumMenu.tsx        # el menú digital (Smart Blurred Fit, clipPath inset)
+    BoxesMediaLogo.tsx     # animación de logo
+    HolographicParticles.tsx / V2.tsx
+    VeoTransition.tsx · BiblicalScenes.tsx · MyComp.tsx
+server.js                  # Express: /api/render-local, /api/upload-asset, /videos
+scripts/render-video.js    # autodetección Chrome/Edge + bypass arm64</pre></div>
+  </section>
+</div></div>
+
+<!-- ERRORES & FIXES -->
+<div id="t-errores" class="tab-content"><div class="container">
+  <section class="section">
+    <div class="section-title">REGISTRO DE ERRORES Y RESOLUCIONES</div>
+    <div class="card">
+      <table class="term-table">
+        <tr><th>Problema</th><th>Causa</th><th>Resolución</th></tr>
+        <tr><td><span class="code">PIPELINE_ERROR_DECODE</span></td><td>Puppeteer/Chromium no decodifica el paquete de video</td><td>Forzar binario de Chrome/Edge local en Windows (códecs H.264/AAC nativos)</td></tr>
+        <tr><td>CORS Firebase Storage</td><td>Storage no envía <span class="code">Access-Control-Allow-Origin</span></td><td>Proxy local en Express (eliminado al pasar a assets locales)</td></tr>
+        <tr><td>Bordes ruidosos del platillo</td><td>recortes/fringes en el render frontal</td><td><span class="code">clipPath: inset(5px 2px)</span> + doble capa "Smart Blurred Fit" en PremiumMenu.tsx</td></tr>
+        <tr><td>Pantalla vertical física</td><td>la TV se instala girada en la pared</td><td>Export horizontal con contenido rotado −90°; cálculo dinámico de canvas en Root.tsx</td></tr>
+      </table>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-title">FASES DE LA MIGRACIÓN</div>
+    <div class="card"><div class="timeline">
+      <div class="tl-item"><div class="tl-time">FASE 1</div><div class="tl-title">Smart Blurred Fit <span class="tag">DONE</span></div><div class="tl-desc">Estructura doble capa difuminada para prevenir recortes del contenido.</div></div>
+      <div class="tl-item"><div class="tl-time">FASE 2</div><div class="tl-title">Filtro Inset / Fringes <span class="tag">DONE</span></div><div class="tl-desc">Eliminación de bordes blancos con clipPath inset.</div></div>
+      <div class="tl-item"><div class="tl-time">FASE 3</div><div class="tl-title">Rotación de composición −90° <span class="tag">DONE</span></div><div class="tl-desc">Wrapper rotatorio CSS + ajuste dinámico del canvas en Remotion para pantalla vertical.</div></div>
+      <div class="tl-item"><div class="tl-time">FASE 4</div><div class="tl-title">Bypass de códecs locales (Chrome) <span class="tag">DONE</span></div><div class="tl-desc">Autodetección de Chrome/Edge para corregir PIPELINE_ERROR_DECODE.</div></div>
+    </div></div>
+  </section>
+</div></div>
+
+<!-- CHANGELOG -->
+<div id="t-changelog" class="tab-content"><div class="container">
+  <section class="section">
+    <div class="section-title">HISTORIAL DE CAMBIOS</div>
+    <div class="changelog recent">
+      <div class="cl-header"><span class="cl-version new">ACTUAL</span><span class="cl-date">19 JUN 2026</span><span style="margin-left:auto;font-size:.62rem;color:var(--gp);">← LATEST</span></div>
+      <ul class="cl-items">
+        <li><span>[+]</span> Repo renombrado a <span class="code">Digital-Menu-Studio</span> (el viejo de feb archivado)</li>
+        <li><span>[+]</span> Nuevo informe Matrix con métricas reales y gráfico 3D WebGL (este documento)</li>
+      </ul>
+    </div>
+    <div class="changelog">
+      <div class="cl-header"><span class="cl-version old">c3b43f7</span><span class="cl-date">16 JUN 2026</span></div>
+      <ul class="cl-items"><li><span>[fix]</span> El media llena el frame de export por defecto (cover) en vez de fit difuminado</li></ul>
+    </div>
+    <div class="changelog">
+      <div class="cl-header"><span class="cl-version old">9a05167</span><span class="cl-date">16 JUN 2026</span></div>
+      <ul class="cl-items">
+        <li><span>[feat]</span> Migración de render y persistencia a 100% local (sin nube)</li>
+        <li><span>[+]</span> server.js: /api/render-local + /api/upload-asset + static /uploads</li>
+        <li><span>[+]</span> firebaseService reimplementado: localStorage + upload local + tray local</li>
+        <li><span>[✓]</span> Validado: export de menú → MP4 H.264 ~11 MB en el tray local</li>
+      </ul>
+    </div>
+    <div class="changelog">
+      <div class="cl-header"><span class="cl-version old">0d150c2</span><span class="cl-date">16 JUN 2026</span></div>
+      <ul class="cl-items"><li><span>[docs]</span> Informe HTML del proyecto (predecesor de este documento)</li></ul>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-title">PENDIENTES</div>
+    <div class="card">
+      <div class="spec-row"><span class="label pend">○ Retiro total de Firebase (firebaseConfig sigue inicializando)</span><span class="value">backlog</span></div>
+      <div class="spec-row"><span class="label pend">○ Limpiar código cloud muerto (cloudRunService, githubActionsService)</span><span class="value">backlog</span></div>
+      <div class="spec-row"><span class="label pend">○ Validar renders de videos &gt; 25 MB</span><span class="value">backlog</span></div>
+    </div>
+  </section>
+</div></div>
+
+<footer>VIDEOSTUDIO_OS · DIGITAL_MENU_STUDIO · informe generado para <strong>BoxesMedia360</strong> · render 100% local</footer>
+
+<script>
+function tab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('t-'+id).classList.add('active'); btn.classList.add('active');
+  if(id==='metricas'){ if(typeof initChart3D==='function'){ initChart3D(); } else { window._pendingChart=true; } }
+}
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('es',{hour12:false});},1000);
+/* Matrix rain */
+(function(){const c=document.getElementById('matrix-rain'),x=c.getContext('2d');let cols,drops;
+const ch="アイウエオカキクケコ0123456789MENU<>{}#$".split('');
+function rs(){c.width=innerWidth;c.height=innerHeight;cols=Math.floor(c.width/14);drops=Array(cols).fill(1);}
+rs();addEventListener('resize',rs);
+setInterval(()=>{x.fillStyle='rgba(0,10,0,0.08)';x.fillRect(0,0,c.width,c.height);x.fillStyle='#00ff41';x.font='14px monospace';
+for(let i=0;i<drops.length;i++){x.fillText(ch[Math.random()*ch.length|0],i*14,drops[i]*14);if(drops[i]*14>c.height&&Math.random()>0.975)drops[i]=0;drops[i]++;}},70);})();
+</script>
+
+<!-- 3D chart (Three.js, WebGL) — scripts clásicos: funcionan también con doble clic (file://) -->
+<script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/postprocessing/MaskPass.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script>
+var started = false;
+function initChart3D(){
+  if (started) return; started = true;
+  if (typeof THREE === 'undefined'){
+    document.querySelector('.chart3d-wrap').innerHTML =
+      '<div style="padding:2rem;color:var(--gm);font-size:.74rem;text-align:center">No se pudo cargar el motor 3D (¿sin internet?).<br>Reconéctate y recarga para ver la gráfica WebGL.</div>';
+    return;
+  }
+  var OrbitControls = THREE.OrbitControls, EffectComposer = THREE.EffectComposer,
+      RenderPass = THREE.RenderPass, UnrealBloomPass = THREE.UnrealBloomPass;
+  var bloomOK = !!(EffectComposer && RenderPass && UnrealBloomPass);
+
+  const DATA = [
+    { label:'Commits', value:36 },
+    { label:'Componentes', value:12 },
+    { label:'Servicios', value:13 },
+    { label:'Deps', value:27 },
+    { label:'Ramas', value:5 },
+    { label:'Fases', value:4 },
+  ];
+  const maxV = Math.max(...DATA.map(d=>d.value));
+  const canvas = document.getElementById('chart3d');
+  const wrap = document.querySelector('.chart3d-wrap');
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  function size(){ return { w: wrap.clientWidth, h: wrap.clientHeight }; }
+  renderer.setSize(size().w, size().h, false);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000a00, 0.035);
+  const camera = new THREE.PerspectiveCamera(50, size().w/size().h, 0.1, 100);
+  camera.position.set(9, 7, 12);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
+  controls.autoRotate = true; controls.autoRotateSpeed = 1.1;
+  controls.minDistance = 8; controls.maxDistance = 24;
+  controls.maxPolarAngle = Math.PI*0.49; controls.target.set(0,1.6,0);
+
+  // luces
+  scene.add(new THREE.AmbientLight(0x114411, 0.6));
+  const key = new THREE.PointLight(0x00ff41, 2.4, 80); key.position.set(6,12,8); scene.add(key);
+  const rim = new THREE.PointLight(0x00aa33, 1.6, 80); rim.position.set(-8,6,-6); scene.add(rim);
+
+  const group = new THREE.Group(); scene.add(group);
+
+  // piso grid
+  const grid = new THREE.GridHelper(16, 16, 0x00ff41, 0x004410);
+  grid.material.transparent = true; grid.material.opacity = 0.35; group.add(grid);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(16,16),
+    new THREE.MeshStandardMaterial({ color:0x001200, metalness:0.6, roughness:0.35 }));
+  floor.rotation.x = -Math.PI/2; floor.position.y = -0.01; group.add(floor);
+
+  // etiqueta sprite
+  function label(text, color='#00ff41', scale=1){
+    const c = document.createElement('canvas'); c.width=256; c.height=64;
+    const g = c.getContext('2d');
+    g.font='bold 40px JetBrains Mono, monospace'; g.fillStyle=color;
+    g.textAlign='center'; g.textBaseline='middle';
+    g.shadowColor=color; g.shadowBlur=12;
+    g.fillText(text, 128, 34);
+    const tex = new THREE.CanvasTexture(c); tex.anisotropy=4;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false }));
+    sp.scale.set(2.6*scale, 0.65*scale, 1);
+    return sp;
+  }
+
+  const N = DATA.length, gap = 2.1, x0 = -((N-1)*gap)/2, maxH = 6.2;
+  DATA.forEach((d,i)=>{
+    const h = Math.max(0.4, d.value/maxV*maxH);
+    const t = d.value/maxV;
+    const col = new THREE.Color().setHSL(0.36, 1, 0.35 + t*0.22);
+    const geo = new THREE.BoxGeometry(1.2, h, 1.2);
+    const mat = new THREE.MeshStandardMaterial({
+      color: col, emissive: col, emissiveIntensity: 0.45 + t*0.5,
+      metalness: 0.4, roughness: 0.25,
+    });
+    const bar = new THREE.Mesh(geo, mat);
+    bar.position.set(x0 + i*gap, h/2, 0);
+    group.add(bar);
+    // wireframe glow
+    const wf = new THREE.LineSegments(new THREE.EdgesGeometry(geo),
+      new THREE.LineBasicMaterial({ color:0x00ff41, transparent:true, opacity:0.5 }));
+    wf.position.copy(bar.position); group.add(wf);
+    // valor encima
+    const v = label(String(d.value), '#9dffb0', 1.05); v.position.set(bar.position.x, h+0.7, 0); group.add(v);
+    // nombre en el piso
+    const n = label(d.label, '#00cc33', 0.8); n.position.set(bar.position.x, 0.25, 1.5); group.add(n);
+  });
+
+  let composer=null;
+  if (bloomOK){
+    try{
+      composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      const bloom = new UnrealBloomPass(new THREE.Vector2(size().w,size().h), 0.9, 0.6, 0.2);
+      composer.addPass(bloom);
+    }catch(e){ composer=null; }
+  }
+
+  function resize(){
+    const {w,h}=size(); if(!w||!h) return;
+    renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
+    if(composer) composer.setSize(w,h);
+  }
+  addEventListener('resize', resize); resize();
+
+  (function loop(){
+    requestAnimationFrame(loop);
+    controls.update();
+    if(composer) composer.render(); else renderer.render(scene,camera);
+  })();
+}
+if (window._pendingChart) { window._pendingChart = false; initChart3D(); }
+</script>
+</body>
+</html>

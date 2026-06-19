@@ -84,6 +84,19 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
         return 'T++';
     };
 
+    // Ajuste de imagen por platillo: Auto (hereda global) -> Llenar (cover) -> Completa (contain)
+    const cycleMediaFit = () => {
+        const order: Array<'auto' | 'cover' | 'contain'> = ['auto', 'cover', 'contain'];
+        const current = item.mediaFit || 'auto';
+        const next = order[(order.indexOf(current) + 1) % order.length];
+        onUpdate(index, { mediaFit: next });
+    };
+
+    const mediaFitLabel = () => {
+        const f = item.mediaFit || 'auto';
+        return f === 'auto' ? 'Auto' : f === 'cover' ? 'Llenar' : 'Compl.';
+    };
+
     return (
         <div className={`p-3 lg:p-5 space-y-3 lg:space-y-4 border rounded-[2rem] group transition-all duration-300 ${hasChanges ? 'border-amber-500/60 bg-amber-500/10 shadow-2xl shadow-amber-500/10 scale-[1.01]' : 'border-white/5 bg-white/5'}`}>
             <div className="flex flex-row gap-3 lg:gap-4">
@@ -160,6 +173,13 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, index, onUpdate, onRe
                             )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
+                            <button
+                                onClick={cycleMediaFit}
+                                className={`h-7 lg:h-8 px-2 rounded-lg lg:rounded-xl flex items-center justify-center text-[9px] font-black transition-all border ${item.mediaFit && item.mediaFit !== 'auto' ? 'bg-amber-500 text-black border-amber-400' : 'bg-white/5 text-white/40 border-white/10'}`}
+                                title="Ajuste de imagen del platillo: Auto (usa el global) / Llenar / Completa"
+                            >
+                                {mediaFitLabel()}
+                            </button>
                             <button
                                 onClick={toggleFontSize}
                                 className={`w-7 h-7 lg:w-8 lg:h-8 rounded-lg lg:rounded-xl flex items-center justify-center text-[10px] font-black transition-all border ${item.fontSizeMode && item.fontSizeMode !== 'normal' ? 'bg-amber-500 text-black border-amber-400' : 'bg-white/5 text-white/40 border-white/10'}`}
@@ -625,7 +645,7 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-white/30">
                             <Film size={14} className="text-amber-500" />
-                            <span className="text-[9px] font-black uppercase">Ajuste de Medios</span>
+                            <span className="text-[9px] font-black uppercase">Ajuste de Medios (Global)</span>
                         </div>
                         <div className="flex gap-1">
                             <button
@@ -655,6 +675,7 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                             ? 'Completa: muestra la imagen/video entero y rellena el sobrante con un fondo desenfocado (evita recortes en logos).'
                             : 'Llenar: la imagen/video ocupa toda la ventana sin márgenes (puede recortar los bordes).'
                         }
+                        {' '}Valor por defecto del menú — cada platillo puede sobrescribirlo con su botón (Auto/Llenar/Compl.).
                     </p>
                 </div>
 
