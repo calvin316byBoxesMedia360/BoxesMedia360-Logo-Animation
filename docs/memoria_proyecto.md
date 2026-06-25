@@ -37,6 +37,15 @@ Este documento sirve como memoria técnica del proyecto, detallando la problemá
   2. Se añadió un escáner automático que busca la existencia de **Google Chrome** o **Microsoft Edge** en el sistema local de Windows y redirige el `browserExecutable` a este.
   3. Al utilizar el navegador Chrome/Edge oficial del sistema del usuario, Chromium obtiene la capacidad nativa de decodificar H.264, eliminando por completo los fallos en renderizados locales con videos.
 
+### E. Frames Defectuosos al Combinar Varios Videos (congelan / saltan / repiten) — jun 2026
+* **Causa:** la composición elegía el componente de video según `isRendering`, pero `isRendering` es solo estado de UI del editor y **nunca llegaba al render**. Por eso el render headless caía en el `<Video>` del DOM (`remotion`), cuyo seeking no es frame-exacto → frames congelados, saltos y repeticiones. Agravado por una discordancia de fps: videos de origen a **24 fps** dentro de una composición a **30 fps** (duplicación de frames / judder), confirmado con `ffprobe`.
+* **Solución:**
+  1. En `scripts/render-video.js` se fuerza `isRendering: true` en los `inputProps`, de modo que el render use el `<Video>` de **`@remotion/media`** (frame-exacto, el componente recomendado por Remotion).
+  2. Se hizo el **fps configurable** (selector **24/30** en `MenuControls.tsx`, default 24). `Root.tsx` fija el `fps` de la composición y el cálculo de duración; `PremiumMenu.tsx` y `Editor.tsx` usan `useVideoConfig().fps` en todo el frame-math, así escenas y textos conservan su **misma duración real** a cualquier fps. Con videos de 24 fps, renderizar a 24 fps los reproduce 1:1 (sin judder).
+
+### Nota de Migración a Local (jun 2026)
+* El proyecto pasó a **render 100% local** (sin Firebase/Cloud Run). El repositorio se renombró a **`Digital-Menu-Studio`** (rama activa `sandbox/reverse-engineering`). El proxy de Firebase Storage y la persistencia en Firestore quedaron como **legado en retiro**; la persistencia activa es `localStorage` + `public/uploads`.
+
 ---
 
 ## 2. Contrato de Arquitectura (Reglas de Oro)

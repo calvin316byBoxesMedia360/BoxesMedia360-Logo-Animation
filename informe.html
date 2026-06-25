@@ -293,7 +293,15 @@ scripts/render-video.js    # autodetección Chrome/Edge + bypass arm64</pre></di
   <section class="section">
     <div class="section-title">HISTORIAL DE CAMBIOS</div>
     <div class="changelog recent">
-      <div class="cl-header"><span class="cl-version new">ACTUAL</span><span class="cl-date">19 JUN 2026</span><span style="margin-left:auto;font-size:.62rem;color:var(--gp);">← LATEST</span></div>
+      <div class="cl-header"><span class="cl-version new">ACTUAL</span><span class="cl-date">20 JUN 2026</span><span style="margin-left:auto;font-size:.62rem;color:var(--gp);">← LATEST</span></div>
+      <ul class="cl-items">
+        <li><span>[fix]</span> Frames defectuosos al combinar videos (congelan/saltan/repiten): el render fuerza <span class="code">isRendering=true</span> → usa el <span class="code">&lt;Video&gt;</span> de <span class="code">@remotion/media</span> (frame-exacto)</li>
+        <li><span>[+]</span> Selector de <b>FPS 24/30</b> en el editor (default 24, coincide 1:1 con videos de 24 fps); frame-math vía <span class="code">useVideoConfig().fps</span></li>
+        <li><span>[+]</span> Documentación actualizada (README, memoria, learning log, troubleshooting)</li>
+      </ul>
+    </div>
+    <div class="changelog">
+      <div class="cl-header"><span class="cl-version old">19 JUN 2026</span><span class="cl-date">repo + informe</span></div>
       <ul class="cl-items">
         <li><span>[+]</span> Repo renombrado a <span class="code">Digital-Menu-Studio</span> (el viejo de feb archivado)</li>
         <li><span>[+]</span> Nuevo informe Matrix con métricas reales y gráfico 3D WebGL (este documento)</li>

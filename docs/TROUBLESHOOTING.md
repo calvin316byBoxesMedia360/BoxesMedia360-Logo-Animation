@@ -5,6 +5,16 @@
 
 ---
 
+## 🎞️ Render local: frames defectuosos (congelan / saltan / repiten) — jun 2026
+
+**Síntoma:** el MP4 exportado tiene frames que se congelan, saltan o se repiten, sobre todo al combinar varios videos.
+
+**Causa y solución:**
+- El render caía en el `<Video>` del DOM porque `isRendering` (estado de UI del editor) no llegaba al render. **Ya corregido** en `scripts/render-video.js` (`isRendering: true`), que fuerza el `<Video>` de `@remotion/media` (frame-exacto).
+- Si persiste un micro-judder: revisa el **fps de tus videos** con `ffprobe -select_streams v:0 -show_entries stream=avg_frame_rate`. Si son de 24 fps, usa el **selector de FPS → 24** en el editor (default) para que coincidan 1:1. Mezclar fuentes de distinto fps (24/30/60) siempre introduce algo de duplicación de frames.
+
+---
+
 ## 🇬🇧 English
 
 ### Installation Issues

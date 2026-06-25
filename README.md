@@ -4,6 +4,25 @@ Este documento contiene todo el conocimiento técnico y operativo necesario para
 
 ---
 
+## ⚡ ESTADO ACTUAL (jun 2026) — RENDER 100% LOCAL
+
+> **Importante:** el proyecto **migró de la nube a render 100% local**. Las secciones de Firebase / Cloud Run más abajo son **referencia histórica** (legado en retiro), no la arquitectura activa.
+
+- **Repositorio:** `https://github.com/calvin316byBoxesMedia360/Digital-Menu-Studio` · rama activa **`sandbox/reverse-engineering`** (la rama `main` es la versión vieja en nube).
+- **Arquitectura activa:** editor React/Vite (`npm run dashboard`, :3001) + backend de render local Express (`npm run server`, :3003) → Remotion + Chrome/Edge local → MP4 H.264 en `out/`. **Sin Firebase ni Cloud Run.**
+- **Persistencia:** `localStorage` (config del menú) + `public/uploads` (assets). Ya no se usan Firestore/Storage.
+- **Correr en local:**
+  ```bash
+  npm install
+  npm run server      # :3003 (backend de render)
+  npm run dashboard   # :3001 (editor)  → http://localhost:3001
+  ```
+- **Novedades recientes (jun 2026):**
+  - **Fix de frames:** el render usa el `<Video>` de `@remotion/media` (antes caía en el `<Video>` del DOM → frames congelados/saltados/repetidos). Ver `scripts/render-video.js` (`isRendering: true`).
+  - **Selector de FPS 24/30** en el editor (default **24**, coincide 1:1 con videos de 24 fps → sin judder). Todo el frame-math usa `useVideoConfig().fps`.
+
+---
+
 ## 🛠️ 1. Arquitectura del Sistema
 
 El sistema es una plataforma híbrida de edición de video en tiempo real:

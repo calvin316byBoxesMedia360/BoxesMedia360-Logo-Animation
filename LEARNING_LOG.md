@@ -86,6 +86,34 @@ Este registro rastrea cada interacción con el sistema para permitir mejora cont
 
 ---
 
+### Entry 003 - Fix de Render Local + Selector de FPS / Local Render Fix + FPS Selector
+
+**Date/Fecha**: 2026-06-20
+
+**Language/Idioma**: Español / Spanish
+
+**Action/Acción**: Migración a render 100% local consolidada; arreglo de frames defectuosos; selector de fps 24/30; repositorio renombrado.
+
+**Details/Detalles**:
+- Repo renombrado a **`Digital-Menu-Studio`** (rama `sandbox/reverse-engineering`). El host viejo de Firebase quedó identificado como deploy legado.
+- **Bug de frames** al combinar varios videos (congelan/saltan/repiten): el render caía en el `<Video>` del DOM porque `isRendering` (estado de UI) no llegaba al render. **Fix:** `scripts/render-video.js` fuerza `isRendering: true` → usa el `<Video>` de `@remotion/media` (frame-exacto).
+- **Discordancia de fps** detectada con `ffprobe`: 9 videos de origen a 24 fps vs composición a 30 fps.
+- **Selector de FPS 24/30** (default 24) en `MenuControls.tsx`; `Root.tsx`/`PremiumMenu.tsx`/`Editor.tsx` ahora usan fps configurable vía `useVideoConfig().fps`.
+
+**Performance/Rendimiento**:
+- Render de prueba (2 videos) validado: MP4 H.264 correcto; default ahora **24 fps** (1:1 con las fuentes, sin judder).
+- Build del dashboard: OK (1800 módulos, ~8 s).
+
+**User Feedback/Feedback del Usuario**: "ahora sí quedó mucho mejor".
+
+**Improvements Identified/Mejoras Identificadas**:
+- ⏳ Detección automática del fps dominante de las fuentes.
+- ⏳ Retiro total del código de nube muerto (`cloudRunService`, `githubActionsService`, Firebase).
+
+**Status/Estado**: ✅ Completed / Completado
+
+---
+
 ## 📈 Analytics / Analíticas
 
 ### Language Preferences / Preferencias de Idioma
@@ -191,8 +219,8 @@ Este registro rastrea cada interacción con el sistema para permitir mejora cont
 
 ---
 
-**Last Updated / Última Actualización**: 2026-01-31T22:40:00Z
+**Last Updated / Última Actualización**: 2026-06-20
 
-**Total Entries / Total de Entradas**: 2
+**Total Entries / Total de Entradas**: 3
 
-**System Version / Versión del Sistema**: 1.0.0
+**System Version / Versión del Sistema**: 1.1.0 (render 100% local + selector de fps)
