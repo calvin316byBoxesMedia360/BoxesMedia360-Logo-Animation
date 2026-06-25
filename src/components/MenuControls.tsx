@@ -545,6 +545,30 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                     </button>
                 </div>
 
+                {/* FPS SELECTOR — fluidez del video (24 cine / 30 suave) */}
+                <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-black uppercase text-white/30">FPS · Fluidez</span>
+                        <span className="text-[8px] font-bold text-white/30">{(props.fps === 30 ? 30 : 24)} fps</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => setProps((prev) => ({ ...prev, fps: 24 }))}
+                            className={`p-3 rounded-2xl border text-left transition-all ${(props.fps === 30 ? 30 : 24) === 24 ? 'bg-amber-500/20 border-amber-500/50' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                        >
+                            <div className={`text-xs font-black ${(props.fps === 30 ? 30 : 24) === 24 ? 'text-amber-500' : 'text-white/60'}`}>24 fps</div>
+                            <div className="text-[8px] font-bold uppercase text-white/30">Cine · ideal p/ tus videos</div>
+                        </button>
+                        <button
+                            onClick={() => setProps((prev) => ({ ...prev, fps: 30 }))}
+                            className={`p-3 rounded-2xl border text-left transition-all ${(props.fps === 30 ? 30 : 24) === 30 ? 'bg-amber-500/20 border-amber-500/50' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                        >
+                            <div className={`text-xs font-black ${(props.fps === 30 ? 30 : 24) === 30 ? 'text-amber-500' : 'text-white/60'}`}>30 fps</div>
+                            <div className="text-[8px] font-bold uppercase text-white/30">Suave · estándar</div>
+                        </button>
+                    </div>
+                </div>
+
                 <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-white/30">

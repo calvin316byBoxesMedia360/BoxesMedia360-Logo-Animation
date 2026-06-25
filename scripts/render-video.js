@@ -27,6 +27,11 @@ function detectLocalBrowser() {
 }
 
 async function renderVideo(menuConfig) {
+    // FIX FRAMES: forzar el componente de video de alta calidad (@remotion/media) en el render.
+    // `isRendering` es solo estado de UI del editor y NO llega aquí, así que sin esto la
+    // composición cae en el <Video> del DOM, que en render headless congela/salta/repite frames.
+    menuConfig = { ...menuConfig, isRendering: true };
+
     // BYPASS ARM64: solo necesario en equipos ARM (Snapdragon) para que Remotion
     // acepte el navegador x64 nativo. En x64 NO debe aplicarse.
     if (process.arch === 'arm64') {

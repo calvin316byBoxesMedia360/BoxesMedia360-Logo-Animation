@@ -25,7 +25,7 @@ const sampleMenuData: PremiumMenuProps = {
 // Función para calcular duración basada en props con mayor robustez
 const calculateMenuDuration = (props: PremiumMenuProps) => {
   const transitionFrames = 25;
-  const FPS = 30;
+  const FPS = (props.fps === 30 ? 30 : 24); // fps configurable (default 24, coincide con videos de origen)
 
   // Asegurar que los booleanos que llegan por CLI sean booleanos reales
   const isSeamlessLoop = props.isSeamlessLoop === true || props.isSeamlessLoop === 'true';
@@ -97,6 +97,7 @@ export const RemotionRoot: React.FC = () => {
   const isRotated = isVertical && inputProps?.rotation === 'left';
   const currentWidth = isVertical && !isRotated ? 1080 : 1920;
   const currentHeight = isVertical && !isRotated ? 1920 : 1080;
+  const currentFps = inputProps?.fps === 30 ? 30 : 24;
 
   return (
     <>
@@ -155,7 +156,7 @@ export const RemotionRoot: React.FC = () => {
         id="PremiumMenuDynamic"
         component={PremiumMenuDynamic}
         durationInFrames={currentDuration}
-        fps={30}
+        fps={currentFps}
         width={currentWidth}
         height={currentHeight}
         defaultProps={sampleMenuData}

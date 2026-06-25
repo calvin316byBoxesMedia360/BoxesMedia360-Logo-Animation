@@ -131,14 +131,16 @@ export const Editor: React.FC = () => {
         }
     };
 
+    const fps = props.fps === 30 ? 30 : 24;
+
     const durationInFrames = React.useMemo(() => {
         const TRANSITION_FRAMES = 25;
 
         // Salvaguarda: si sceneDuration > 100, es probable que se guardó en frames accidentalmente
         let sceneDurationSec = props.sceneDuration || 4;
-        if (sceneDurationSec > 100) sceneDurationSec = sceneDurationSec / 30;
+        if (sceneDurationSec > 100) sceneDurationSec = sceneDurationSec / fps;
 
-        const sceneDurationFrames = Math.round(sceneDurationSec * 30);
+        const sceneDurationFrames = Math.round(sceneDurationSec * fps);
 
         const safeItems = props.menuItems.length > 0 ? props.menuItems : [{
             name: 'Menú en Construcción',
@@ -153,10 +155,10 @@ export const Editor: React.FC = () => {
         itemsToRender.forEach((item, index) => {
             // Lo mismo para duraciones individuales
             let itemDurSec = item.duration;
-            if (itemDurSec && itemDurSec > 100) itemDurSec = itemDurSec / 30;
+            if (itemDurSec && itemDurSec > 100) itemDurSec = itemDurSec / fps;
 
             let itemDurationFrames = itemDurSec
-                ? Math.round(itemDurSec * 30)
+                ? Math.round(itemDurSec * fps)
                 : sceneDurationFrames;
 
             // Si es el último item y es un loop sin fin, solo lo necesitamos 
@@ -173,7 +175,7 @@ export const Editor: React.FC = () => {
         });
 
         return Math.max(1, total);
-    }, [props.menuItems, props.sceneDuration, props.isSeamlessLoop]);
+    }, [props.menuItems, props.sceneDuration, props.isSeamlessLoop, props.fps]);
 
     return (
         <div className="flex flex-col h-screen bg-[#050505] text-white selection:bg-amber-500/30 overflow-hidden">
@@ -232,7 +234,7 @@ export const Editor: React.FC = () => {
                                 menuItems: JSON.parse(JSON.stringify(props.menuItems))
                             } as any}
                             durationInFrames={durationInFrames}
-                            fps={30}
+                            fps={fps}
                             compositionWidth={props.orientation === 'vertical' && props.rotation !== 'left' ? 1080 : 1920}
                             compositionHeight={props.orientation === 'vertical' && props.rotation !== 'left' ? 1920 : 1080}
                             style={{ width: '100%', height: '100%' }}

@@ -23,6 +23,7 @@ export interface PremiumMenuProps {
     restaurantName?: string;
     accentColor?: string;
     sceneDuration?: number;
+    fps?: number;
     logoUri?: string;
     backgroundMusic?: string;
     isSeamlessLoop?: boolean;
@@ -743,8 +744,9 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     // Asegurar booleano real (parche para CLI de Remotion)
     const isSeamlessLoop = isSeamlessLoopProp === true || (isSeamlessLoopProp as unknown) === 'true';
 
-    // Convertir segundos a frames para la lógica interna
-    const sceneDurationFrames = Math.round(sceneDuration * 30);
+    // Convertir segundos a frames para la lógica interna (fps configurable de la composición)
+    const { fps } = useVideoConfig();
+    const sceneDurationFrames = Math.round(sceneDuration * fps);
     const grainOpacity = !lightFxEnabled
         ? 0.04
         : lightFxMode === 'vividPop'
@@ -782,7 +784,7 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
         let currentFrame = 0;
         return itemsToRender.map((item, index) => {
             let itemDurationFrames = item.duration
-                ? Math.round(item.duration * 30)
+                ? Math.round(item.duration * fps)
                 : sceneDurationFrames;
 
             // Asegurar duración mínima
@@ -809,7 +811,7 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
                 sceneIndex: index
             };
         });
-    }, [itemsToRender, sceneDurationFrames, isSeamlessLoop]);
+    }, [itemsToRender, sceneDurationFrames, isSeamlessLoop, fps]);
 
     const isRotatedLeft = rotation === 'left';
 
