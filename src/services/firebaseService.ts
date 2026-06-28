@@ -49,10 +49,16 @@ export async function getMenuConfig(userId: string): Promise<PremiumMenuProps | 
  * Sube un archivo (imagen/video) al servidor local y devuelve su URL local.
  */
 async function uploadAssetLocal(file: Blob, filename: string): Promise<string> {
+    // Normalizar y limpiar caracteres no-ASCII (tildes, eñes, etc.) para evitar fallos de codificación en headers HTTP
+    const cleanFilename = filename
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Elimina acentos/tildes
+        .replace(/[^a-zA-Z0-9._-]/g, '_'); // Reemplaza espacios y otros caracteres con guión bajo
+
     const res = await fetch(`${LOCAL_SERVER}/api/upload-asset`, {
         method: 'POST',
         headers: {
-            'x-filename': filename,
+            'x-filename': cleanFilename,
             'Content-Type': file.type || 'application/octet-stream',
         },
         body: file,
