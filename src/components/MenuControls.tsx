@@ -5,7 +5,6 @@ import { renderWithLocal } from '../services/localRenderService';
 import { triggerDownload } from '../utils/downloadUtils';
 import { auth } from '../services/firebaseConfig';
 import {
-    Palette,
     Sparkles,
     Save,
     Download,
@@ -517,14 +516,7 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                 </div>
 
                 {/* VISUAL & AI TOOLS */}
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
-                        <div className="flex items-center gap-2 text-white/30">
-                            <Palette size={14} />
-                            <span className="text-[9px] font-black uppercase">Color</span>
-                        </div>
-                        <input type="color" value={props.accentColor} onChange={(e) => setProps(prev => ({ ...prev, accentColor: e.target.value }))} className="w-full h-12 rounded-xl bg-black/40 border-none cursor-pointer" />
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-white/5 rounded-3xl border border-white/5 space-y-3">
                         <div className="flex items-center gap-2 text-white/30">
                             <RotateCcw size={14} />
