@@ -176,7 +176,7 @@ footer a:hover{color:var(--gp);}
       <div class="spec-row"><span class="label">Backend :3003 escucha en 0.0.0.0 sin autenticación</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
       <div class="spec-row"><span class="label">Firebase SDK aún se inicializa en el editor (auth sin uso)</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
       <div class="spec-row"><span class="label">out/ 853 MB + public/uploads 157 MB sin rutina de limpieza</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
-      <div class="spec-row"><span class="label">showAccentLine sin toggle en MenuControls</span><span class="value check">✓ RESUELTO (23 JUL)</span></div>
+      <div class="spec-row"><span class="label">Línea de acento (showAccentLine)</span><span class="value check">✓ ELIMINADA (23 JUL)</span></div>
     </div>
   </section>
 </div></div>
@@ -318,6 +318,7 @@ scripts/render-video.js    # autodetección Chrome/Edge + bypass arm64</pre></di
         <li><span>[feat]</span> <span class="code">8c42cdb</span> toggle <b>Línea Acento</b> (VISIBLE/OCULTA) en <span class="code">MenuControls</span>, junto a Filtro Oscuro y Movimiento. Verificado: al apagarlo la barra difuminada desaparece del player y el estado persiste en <span class="code">localStorage</span></li>
         <li><span>[fix]</span> Remote de git corregido: apuntaba a <span class="code">BoxesMedia360-Logo-Animation</span> (nombre previo al renombrado). GitHub redirigía, por eso pasó inadvertido</li>
         <li><span>[doc]</span> Corregido el proxy fantasma: <span class="code">/api/proxy</span> ya no existe en <span class="code">server.js</span>; se retiró de la memoria y de las reglas de oro</li>
+        <li><span>[-]</span> <span class="code">228eaac</span> <b>línea de acento eliminada por completo</b>: fuera el bloque de <span class="code">DishScene</span>, la prop <span class="code">showAccentLine</span> y su toggle. Revierte <span class="code">e519d7f</span> y <span class="code">8c42cdb</span> — se optó por quitarla en vez de dejarla tras un interruptor. Verificado renderizando con <span class="code">showAccentLine: true</span>: el MP4 sale sin línea</li>
         <li><span>[-]</span> <span class="code">11a00a1</span> eliminado el selector de <b>COLOR</b> del panel de herramientas visuales. <span class="code">accentColor</span> queda fijo en <span class="code">#D4AF37</span>: no cambia el aspecto del video, pero deja de ser editable desde la UI</li>
         <li><span>[audit]</span> Auditoría completa del proyecto: 10 hallazgos registrados en la pestaña STATUS y en ERRORES &amp; FIXES. Prioridad 1: la duración se calcula en 3 sitios con reglas distintas</li>
       </ul>
