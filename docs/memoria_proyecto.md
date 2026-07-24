@@ -62,6 +62,13 @@ Revisión de todo el código y la documentación con el sistema corriendo (`:300
   * También se eliminó el **selector de COLOR** del panel (`11a00a1`). `accentColor` queda fijo en `#D4AF37` y sigue tiñendo el precio, el borde de su tarjeta y las partículas doradas — **no** era el control de la línea, cosa que causó confusión: quitar el color no borraba la barra.
 * **Abierto (MENOR) — Código muerto de la era nube:** `cloudRunService.ts`, `githubActionsService.ts`, `renderService.ts`, `vertexAI.ts`, `scripts/upload-to-storage-action.js`, `Dockerfile`, `firebase.json`. Más `translateX` sin usar en `PremiumMenu.tsx`.
 
+### G. Tarjeta de Precio Vacía ("el óvalo") — 23 jul 2026
+
+* **Síntoma:** un pequeño recuadro redondeado oscuro flotando sobre la imagen, sin contenido. Reportado justo después de eliminar la línea de acento, lo que hacía pensar que era un resto de ella.
+* **Causa:** la tarjeta del precio se montaba siempre, tuviera o no texto. Con `price: ''` quedaba el contenedor con `backgroundColor: rgba(212,175,55,0.125)`, `border: 1px` y `padding: 10px 25px` — un óvalo vacío. Nada que ver con la línea de acento.
+* **Solución (`ca1fbbd`):** el texto del precio se calcula una sola vez en `priceText` (ya sin símbolo si el platillo lo oculta) y la tarjeta se monta solo si no está vacío. Un precio que queda en `""` tras retirarle el símbolo tampoco dibuja nada.
+* **Verificado** en el editor con los tres casos: `"$14.99"` → tarjeta; `""` → nada; `"$9.99"` con `showCurrencySymbol: false` → `9.99`.
+
 ### Nota de Migración a Local (jun 2026)
 * El proyecto pasó a **render 100% local** (sin Firebase/Cloud Run). El repositorio se renombró a **`Digital-Menu-Studio`** (rama activa `sandbox/reverse-engineering`). El proxy de Firebase Storage y la persistencia en Firestore quedaron como **legado en retiro**; la persistencia activa es `localStorage` + `public/uploads`.
 
