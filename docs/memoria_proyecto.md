@@ -7,6 +7,8 @@ Este documento sirve como memoria técnica del proyecto, detallando la problemá
 ## 1. Problemas Identificados y Soluciones
 
 ### A. Fallos de CORS en la Previsualización de Imágenes
+> ⚠️ **HISTÓRICO — ya no aplica (verificado 23 jul 2026).** El proxy `/api/proxy` descrito aquí **fue eliminado** al migrar a assets locales; no existe en `server.js`. Los assets se sirven desde `public/uploads` en el mismo origen, así que no hay CORS que evadir. Se conserva por contexto de la etapa nube.
+
 * **Causa:** El cliente consume imágenes y videos directamente de Firebase Storage. Al cargarse en el lienzo canvas de Remotion (`<Player>`), el navegador arroja errores de seguridad CORS si Google Cloud Storage no expone las cabeceras correspondientes.
 * **Solución:**
   1. Se implementó un middleware proxy en el servidor Express local (`server.js`) accesible en `/api/proxy?url=...`.
@@ -43,6 +45,21 @@ Este documento sirve como memoria técnica del proyecto, detallando la problemá
   1. En `scripts/render-video.js` se fuerza `isRendering: true` en los `inputProps`, de modo que el render use el `<Video>` de **`@remotion/media`** (frame-exacto, el componente recomendado por Remotion).
   2. Se hizo el **fps configurable** (selector **24/30** en `MenuControls.tsx`, default 24). `Root.tsx` fija el `fps` de la composición y el cálculo de duración; `PremiumMenu.tsx` y `Editor.tsx` usan `useVideoConfig().fps` en todo el frame-math, así escenas y textos conservan su **misma duración real** a cualquier fps. Con videos de 24 fps, renderizar a 24 fps los reproduce 1:1 (sin judder).
 
+### F. Auditoría Completa del Proyecto — 23 jul 2026
+
+Revisión de todo el código y la documentación con el sistema corriendo (`:3001` Vite + `:3003` Express). Resultados:
+
+* **Corregido — Remote de git con el nombre viejo.** `.git/config` apuntaba a `BoxesMedia360-Logo-Animation.git`, el nombre anterior al renombrado. GitHub redirige los repos renombrados, así que fetch y push funcionaban igual y el desfase pasó inadvertido durante un mes. Verificado con `gh api` (devuelve `full_name: Digital-Menu-Studio`) y actualizado con `git remote set-url`. **El README siempre estuvo bien; lo desactualizado era la config local.**
+* **Corregido — El proxy `/api/proxy` no existe.** La sección A de esta memoria y la Regla de Oro 3 describían un middleware proxy de Express para evadir CORS de Firebase Storage. Se eliminó al migrar a assets locales: hoy `server.js` solo expone `/api/upload-asset`, `/api/render`, `/api/render-local`, `/api/videos` y `/api/health`. Documentación corregida abajo. *Esa entrada obsoleta ya había provocado que se describieran capacidades inexistentes del backend en material del proyecto.*
+* **Abierto (ALTO) — La duración se calcula tres veces con reglas distintas:** `Editor.tsx` (preview), `Root.tsx` (duración de la composición) y `PremiumMenu.tsx` (posición de cada escena). Solo `PremiumMenu` aplica el mínimo de 30 frames por escena, y solo `Root` el mínimo total de 30. Con 2 platillos a 1 s y 24 fps: preview 23 frames, composición 30, escenas reales terminando en el 35 → **la última escena sale cortada y el preview no coincide con el MP4**. Con duraciones normales (4 s) no se manifiesta. Arreglo: una sola `calculateTimeline(props, fps)` consumida por los tres.
+* **Abierto (ALTO) — Dos flujos de exportación.** El botón del header (`Editor.handleExport`) auto-sincroniza los `blob:` al servidor local; el de la barra lateral (`MenuControls.handleExport`) bloquea con un alert de la era nube ("deben subirse a la nube antes de exportar"). Hay que dejar uno.
+* **Abierto (REVISAR) — Reglas de Firebase abiertas.** `firestore.rules` y `storage.rules` siguen en `allow read, write: if true` sobre el proyecto real `boxesos-crmtest`. El `/api/health` del backend reporta `firebase: connected`, o sea que Firebase Admin sí encuentra credenciales en esta máquina y `/api/render` escribiría en el Firestore real. Confirmar si el proyecto sigue vivo y cerrarlo.
+* **Abierto (MEDIO) — `npm run lint` no compila.** `tsconfig.json` usa `module: commonjs` y `lib: es2015`, incompatible con Vite: `import.meta.env` falla en 5 servicios y el `include` arrastra `skills/`. ~28 errores que enmascaran los reales.
+* **Abierto (MEDIO) — Backend expuesto en la red.** `server.js` hace `listen(PORT)` sin host (0.0.0.0), con `cors({origin:true})` y subida de 200 MB sin autenticación. Verificado con `netstat`. Vite sí está limitado a localhost.
+* **Abierto (MEDIO) — Firebase residual en el editor.** `MenuControls.tsx` importa `auth` y monta un `onAuthStateChanged` que nunca dispara (nadie llama a `signInAnonymously`): inicializa y empaqueta el SDK sin cumplir función.
+* **Abierto (MEDIO) — Higiene de disco.** `out/` 853 MB (19 MP4) y `public/uploads/` 157 MB, sin rutina de limpieza. La bandeja vive en `localStorage`: al vaciar `out/` quedan enlaces rotos mostrados como "LISTO".
+* **Abierto (MENOR) — Código muerto de la era nube:** `cloudRunService.ts`, `githubActionsService.ts`, `renderService.ts`, `vertexAI.ts`, `scripts/upload-to-storage-action.js`, `Dockerfile`, `firebase.json`. Más `translateX` sin usar en `PremiumMenu.tsx`.
+
 ### Nota de Migración a Local (jun 2026)
 * El proyecto pasó a **render 100% local** (sin Firebase/Cloud Run). El repositorio se renombró a **`Digital-Menu-Studio`** (rama activa `sandbox/reverse-engineering`). El proxy de Firebase Storage y la persistencia en Firestore quedaron como **legado en retiro**; la persistencia activa es `localStorage` + `public/uploads`.
 
@@ -52,4 +69,6 @@ Este documento sirve como memoria técnica del proyecto, detallando la problemá
 
 1. **Monocromatismo Verde Matrix (para documentación externa):** Para todos los reportes visuales se debe seguir el esquema de color Matrix.
 2. **Dimensiones de Rotación:** Al renderizar con rotación izquierda activada, la composición principal *siempre* debe exportar una resolución de `1920x1080` píxeles. La simulación vertical ocurre estrictamente en un subcontenedor interno rotado.
-3. **Uso de Proxy:** No se debe evadir el proxy de Express para peticiones de assets de Firebase Storage en desarrollo local, de lo contrario volverán a surgir errores CORS.
+3. ~~**Uso de Proxy:** No se debe evadir el proxy de Express para peticiones de assets de Firebase Storage en desarrollo local, de lo contrario volverán a surgir errores CORS.~~
+   **DEROGADA (23 jul 2026).** El proxy no existe desde la migración a local. Regla vigente: **los assets se sirven desde el mismo origen** (`public/uploads` vía `/uploads` en `:3003`); no se introducen dependencias de assets remotos en el render.
+4. **Fuente única de duración:** el cálculo de frames por escena debe vivir en un solo sitio y ser consumido por preview, composición y escenas. Hoy está duplicado en tres — ver sección F.

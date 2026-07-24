@@ -4,6 +4,22 @@ Este contrato define las reglas inmutables de funcionamiento, arquitectura y pro
 
 ---
 
+## ⚠️ ESTADO DEL CONTRATO (23 jul 2026)
+
+**Este documento quedó desfasado respecto al código.** Fue escrito para la arquitectura en nube y aún declara Cloud Run como protocolo obligatorio de render y Firestore como persistencia real — exactamente lo contrario del estado actual desde la migración de jun 2026.
+
+**Vigente hoy:**
+- **Render:** Express local `:3003` → `POST /api/render-local` → Remotion + Chrome/Edge del sistema → MP4 en `out/`. **Sin Cloud Run.**
+- **Persistencia:** `localStorage` (config) + `public/uploads` servido por `:3003` (assets). **Sin Firestore ni Firebase Storage.**
+- **Assets:** mismo origen. El proxy `/api/proxy` **no existe** (eliminado en la migración).
+- **Repo:** `Digital-Menu-Studio`, rama activa `sandbox/reverse-engineering`.
+
+**Legado en retiro (referencia histórica, no ejecutar):** secciones 2 (Protocolo Firebase), 3 (Protocolo Cloud Run) y los puntos 4.1–4.2 del troubleshooting. La sección 1.2 (Protocolo Blob/URL) sigue siendo válida en concepto, pero el destino de subida es el servidor local, no Firebase Storage.
+
+**Sigue plenamente vigente:** 1.3 Blindaje de Resiliencia, 3.2 Protocolo de Descarga, 4.3 Focus perdido al escribir, y el Diccionario de Iconos.
+
+---
+
 ## 🏗️ 1. PILARES ARQUITECTÓNICOS
 
 ### 1.1 Sincronización Híbrida
@@ -83,6 +99,10 @@ Si el sistema se despliega en un nuevo proyecto de Firebase, estos pasos son **O
 ---
 
 ##  Aprendizajes Recientes (Learning Log)
+- *23/07/2026* — **Remote de git desfasado**: apuntaba a `BoxesMedia360-Logo-Animation.git`, nombre previo al renombrado del repo. GitHub redirige repos renombrados, así que fetch/push seguían funcionando y nadie notó el desfase. **Lección:** un `git remote -v` que no coincide con la documentación no siempre significa repo equivocado — verificar con `gh api repos/<owner>/<name>` antes de concluir nada.
+- *23/07/2026* — **Documentación que inventa capacidades**: la memoria describía un proxy `/api/proxy` eliminado hace un mes, y de ahí se propagó a material del proyecto la idea de que el backend hace proxy de imágenes. **Lección:** al retirar un componente, tachar su entrada en la memoria en el mismo commit.
+- *23/07/2026* — **Fuente única de duración**: el cálculo de frames vive duplicado en `Editor.tsx`, `Root.tsx` y `PremiumMenu.tsx` con clamps distintos. Con escenas cortas (<1.25 s) la última sale cortada en el MP4 y el preview no coincide. Pendiente de unificar.
+- *23/07/2026* — **Auditoría completa**: 10 hallazgos registrados en `informe.html` y `docs/memoria_proyecto.md` §F.
 - *08/03/2026* — **Hotfix Descarga Forzada v2.1**: Reemplazado `<a href download>` con `handleDownload()` Blob-based en `MenuControls.tsx`. Los navegadores modernos bloquean la descarga directa de GCS Storage en dominios cruzados.
 - *08/03/2026* — **Cloud Run rev-00006**: Incremento de recursos a 4 vCPU / 8 GB RAM / 30 min timeout. Resuelve definitivamente los cuelgues al procesar videos de alta duración con Remotion/FFmpeg.
 - *08/03/2026* — **Timeout Frontend v2.1**: `AbortController` elevado a 25 minutos en `cloudRunService.ts` para alinearse con el nuevo techo del servidor.

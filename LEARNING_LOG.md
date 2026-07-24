@@ -114,6 +114,39 @@ Este registro rastrea cada interacción con el sistema para permitir mejora cont
 
 ---
 
+### Entry 004 - Auditoría del Proyecto / Project Audit
+
+**Date/Fecha**: 2026-07-23
+
+**Language/Idioma**: Español / Spanish
+
+**Action/Acción**: Revisión completa de código y documentación; commit de `showAccentLine`; corrección del remote de git.
+
+**Details/Detalles**:
+- **Commit `e519d7f`** — `feat(menu): prop showAccentLine`. La línea de acento de `DishScene` pasa a ser opcional; default `true`, sin cambio visual. Pendiente el toggle en `MenuControls`.
+- **Remote corregido** — `.git/config` apuntaba a `BoxesMedia360-Logo-Animation.git`, el nombre anterior al renombrado. GitHub redirige repos renombrados, por eso fetch/push funcionaban y el desfase pasó un mes inadvertido. Verificado con `gh api` y corregido con `git remote set-url`.
+- **Proxy fantasma** — `docs/memoria_proyecto.md` documentaba un middleware `/api/proxy` que ya no existe en `server.js`. Corregido en la memoria y derogada la "Regla de Oro" que lo exigía.
+- **10 hallazgos de deuda técnica** registrados en `informe.html` (STATUS + ERRORES & FIXES) y en `docs/memoria_proyecto.md` sección F.
+
+**Performance/Rendimiento**:
+- Sistema verificado en caliente: `:3001` (Vite) y `:3003` (Express) respondiendo; `/api/health` → `{"status":"ok","firebase":"connected"}`.
+- `npx tsc`: ~28 errores, ninguno del código de negocio — `tsconfig` desalineado con Vite.
+- Disco: `out/` 853 MB (19 MP4), `public/uploads/` 157 MB, sin rutina de limpieza.
+
+**User Feedback/Feedback del Usuario**: El usuario detectó el nombre correcto del repo (`Digital-Menu-Studio`) antes de que la verificación lo confirmara.
+
+**Improvements Identified/Mejoras Identificadas**:
+- ⏳ **P1** — Unificar el cálculo de duración (`Editor.tsx` / `Root.tsx` / `PremiumMenu.tsx`) en una sola función: hoy con escenas cortas la última sale cortada y el preview no coincide con el MP4.
+- ⏳ **P2** — Dejar un único flujo de exportación (el de `MenuControls` conserva el alert de la era nube).
+- ⏳ **P3** — Confirmar/cerrar las reglas `if true` de Firestore y Storage.
+- ⏳ **P4** — Arreglar `tsconfig` para recuperar `npm run lint`.
+- ⏳ **P5** — `listen(PORT, '127.0.0.1')` en `server.js`.
+- ⏳ Retiro del código muerto de la era nube (heredado de Entry 003, sigue pendiente).
+
+**Status/Estado**: ✅ Auditoría completada / Hallazgos abiertos pendientes de corrección
+
+---
+
 ## 📈 Analytics / Analíticas
 
 ### Language Preferences / Preferencias de Idioma
@@ -219,8 +252,8 @@ Este registro rastrea cada interacción con el sistema para permitir mejora cont
 
 ---
 
-**Last Updated / Última Actualización**: 2026-06-20
+**Last Updated / Última Actualización**: 2026-07-23
 
-**Total Entries / Total de Entradas**: 3
+**Total Entries / Total de Entradas**: 4
 
-**System Version / Versión del Sistema**: 1.1.0 (render 100% local + selector de fps)
+**System Version / Versión del Sistema**: 1.1.1 (render 100% local + selector de fps + auditoría jul 2026)

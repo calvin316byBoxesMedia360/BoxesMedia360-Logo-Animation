@@ -129,5 +129,14 @@ VITE_CLOUD_RUN_URL=https://digital-menu-render-938762407896.us-central1.run.app
 
 ---
 
-**Última revisión completa**: 8 de Marzo, 2026 (v2.1 — Hotfix Descarga Forzada).
-**Estado del sistema**: ✅ Operativo. Cloud Run `rev-00006` (4 vCPU / 8 GB / 30 min). Descarga MP4 local funcional.
+**Última revisión completa**: 23 de Julio, 2026 (auditoría de código y documentación).
+**Estado del sistema**: ✅ Operativo en render 100% local (Express `:3003` + Remotion + Chrome/Edge). Las referencias a Cloud Run de este documento son legado en retiro.
+
+### Deuda técnica conocida (23 jul 2026)
+
+Detalle completo en [`docs/memoria_proyecto.md`](docs/memoria_proyecto.md) §F y en `informe.html` (pestañas STATUS y ERRORES & FIXES). Los tres primeros antes de tocar nada más:
+
+1. **La duración se calcula en tres sitios** (`Editor.tsx`, `Root.tsx`, `PremiumMenu.tsx`) con reglas distintas → con escenas de menos de ~1.25 s la última sale cortada y el preview no coincide con el MP4.
+2. **Dos botones "EXPORTAR MP4"** con comportamiento distinto; el de la barra lateral bloquea con un alert de la era nube.
+3. **Reglas de Firestore/Storage en `if true`** sobre un proyecto real — confirmar si sigue vivo y cerrarlo.
+4. `npm run lint` no compila (`tsconfig` desalineado con Vite) · backend escuchando en `0.0.0.0` sin auth · SDK de Firebase aún inicializándose en el editor · `out/` 853 MB sin limpieza.

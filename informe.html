@@ -137,14 +137,14 @@ footer a:hover{color:var(--gp);}
   <section class="section">
     <div class="section-title">SYSTEM_METRICS</div>
     <div class="grid-4">
-      <div class="metric"><span class="metric-value">36</span><span class="metric-label">Commits</span></div>
+      <div class="metric"><span class="metric-value">41</span><span class="metric-label">Commits</span></div>
       <div class="metric"><span class="metric-value">12</span><span class="metric-label">Componentes Remotion</span></div>
       <div class="metric"><span class="metric-value">13</span><span class="metric-label">Servicios TS</span></div>
       <div class="metric"><span class="metric-value">27</span><span class="metric-label">Dependencias</span></div>
     </div>
     <div class="grid-4" style="margin-top:.75rem;">
-      <div class="metric"><span class="metric-value">2</span><span class="metric-label">Renders MP4</span></div>
-      <div class="metric"><span class="metric-value">13 MB</span><span class="metric-label">Video producido</span></div>
+      <div class="metric"><span class="metric-value">19</span><span class="metric-label">Renders MP4 en out/</span></div>
+      <div class="metric"><span class="metric-value">853 MB</span><span class="metric-label">Video acumulado</span></div>
       <div class="metric"><span class="metric-value">1920×1080</span><span class="metric-label">Resolución final</span></div>
       <div class="metric"><span class="metric-value">3003</span><span class="metric-label">Puerto render local</span></div>
     </div>
@@ -163,6 +163,20 @@ footer a:hover{color:var(--gp);}
       <div class="spec-row"><span class="label">Rotación 90° para pantalla vertical física</span><span class="value check">✓ RESUELTO</span></div>
       <div class="spec-row"><span class="label">Persistencia/assets en la nube (Firebase)</span><span class="value">⟳ EN RETIRO (→ local)</span></div>
       <div class="spec-row"><span class="label">Repositorio GitHub renombrado a Digital-Menu-Studio</span><span class="value check">✓ HECHO</span></div>
+      <div class="spec-row"><span class="label">Remote local apuntando al nombre viejo del repo</span><span class="value check">✓ CORREGIDO (23 JUL)</span></div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-title">AUDITORÍA 23 JUL 2026 · DEUDA TÉCNICA ABIERTA</div>
+    <div class="card"><div class="corner-tl"></div><div class="corner-tr"></div>
+      <div class="spec-row"><span class="label">Cálculo de duración duplicado en 3 archivos con reglas distintas</span><span class="value">⚠ ABIERTO · ALTO</span></div>
+      <div class="spec-row"><span class="label">Dos botones "EXPORTAR MP4" con comportamiento distinto</span><span class="value">⚠ ABIERTO · ALTO</span></div>
+      <div class="spec-row"><span class="label">Reglas Firestore/Storage abiertas (allow read, write: if true)</span><span class="value">⚠ ABIERTO · REVISAR</span></div>
+      <div class="spec-row"><span class="label">npm run lint (tsc) no compila · tsconfig desalineado con Vite</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
+      <div class="spec-row"><span class="label">Backend :3003 escucha en 0.0.0.0 sin autenticación</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
+      <div class="spec-row"><span class="label">Firebase SDK aún se inicializa en el editor (auth sin uso)</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
+      <div class="spec-row"><span class="label">out/ 853 MB + public/uploads 157 MB sin rutina de limpieza</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
+      <div class="spec-row"><span class="label">showAccentLine sin toggle en MenuControls</span><span class="value">⚠ ABIERTO · MENOR</span></div>
     </div>
   </section>
 </div></div>
@@ -182,7 +196,7 @@ footer a:hover{color:var(--gp);}
     <div class="card">
       <table class="term-table">
         <tr><th>Métrica</th><th>Valor</th><th>Detalle</th></tr>
-        <tr><td>Commits</td><td>36</td><td>historial total en la rama de trabajo</td></tr>
+        <tr><td>Commits</td><td>41</td><td>historial total en la rama de trabajo</td></tr>
         <tr><td>Componentes Remotion</td><td>12</td><td>PremiumMenu, BoxesMediaLogo, HolographicParticles v1/v2, VeoTransition, BiblicalScenes, Editor, Root…</td></tr>
         <tr><td>Servicios TS</td><td>13</td><td>localRenderService, firebaseService (reimplementado local), render, etc.</td></tr>
         <tr><td>Dependencias</td><td>27</td><td>17 producción + 10 desarrollo</td></tr>
@@ -274,6 +288,11 @@ scripts/render-video.js    # autodetección Chrome/Edge + bypass arm64</pre></di
         <tr><td>CORS Firebase Storage</td><td>Storage no envía <span class="code">Access-Control-Allow-Origin</span></td><td>Proxy local en Express (eliminado al pasar a assets locales)</td></tr>
         <tr><td>Bordes ruidosos del platillo</td><td>recortes/fringes en el render frontal</td><td><span class="code">clipPath: inset(5px 2px)</span> + doble capa "Smart Blurred Fit" en PremiumMenu.tsx</td></tr>
         <tr><td>Pantalla vertical física</td><td>la TV se instala girada en la pared</td><td>Export horizontal con contenido rotado −90°; cálculo dinámico de canvas en Root.tsx</td></tr>
+        <tr><td>Última escena cortada con duraciones cortas</td><td>la duración se calcula en 3 sitios (<span class="code">Editor.tsx</span>, <span class="code">Root.tsx</span>, <span class="code">PremiumMenu.tsx</span>) con clamps distintos: mínimo por escena de 30 frames solo en uno de ellos</td><td><b>ABIERTO</b> · unificar en una sola función <span class="code">calculateTimeline(props, fps)</span></td></tr>
+        <tr><td>Alert "deben subirse a la nube" al exportar</td><td><span class="code">MenuControls.handleExport</span> conserva la validación de la era Cloud Run; <span class="code">Editor.handleExport</span> sí auto-sincroniza a local</td><td><b>ABIERTO</b> · dejar un solo flujo de exportación</td></tr>
+        <tr><td><span class="code">npm run lint</span> no compila</td><td><span class="code">tsconfig</span> con <span class="code">module: commonjs</span> y <span class="code">lib: es2015</span> → <span class="code">import.meta.env</span> inválido en 5 servicios; el <span class="code">include</span> arrastra <span class="code">skills/</span></td><td><b>ABIERTO</b> · <span class="code">module: esnext</span> + <span class="code">moduleResolution: bundler</span> + <span class="code">include: ["src"]</span></td></tr>
+        <tr><td>Proxy <span class="code">/api/proxy</span> documentado pero inexistente</td><td>se eliminó al migrar a assets locales; la memoria y las "reglas de oro" seguían exigiéndolo</td><td><b>CORREGIDO 23 JUL</b> · documentación alineada con <span class="code">server.js</span></td></tr>
+        <tr><td>Remote git con el nombre viejo del repo</td><td>el repo se renombró a <span class="code">Digital-Menu-Studio</span>; GitHub redirige, así que fetch/push seguían funcionando y nadie lo notó</td><td><b>CORREGIDO 23 JUL</b> · <span class="code">git remote set-url</span> al nombre canónico</td></tr>
       </table>
     </div>
   </section>
@@ -293,7 +312,16 @@ scripts/render-video.js    # autodetección Chrome/Edge + bypass arm64</pre></di
   <section class="section">
     <div class="section-title">HISTORIAL DE CAMBIOS</div>
     <div class="changelog recent">
-      <div class="cl-header"><span class="cl-version new">ACTUAL</span><span class="cl-date">20 JUN 2026</span><span style="margin-left:auto;font-size:.62rem;color:var(--gp);">← LATEST</span></div>
+      <div class="cl-header"><span class="cl-version new">ACTUAL</span><span class="cl-date">23 JUL 2026</span><span style="margin-left:auto;font-size:.62rem;color:var(--gp);">← LATEST</span></div>
+      <ul class="cl-items">
+        <li><span>[feat]</span> <span class="code">e519d7f</span> prop <span class="code">showAccentLine</span>: la línea de acento de <span class="code">DishScene</span> pasa a ser opcional (default <span class="code">true</span>, sin cambio visual). Falta exponer el toggle en <span class="code">MenuControls</span></li>
+        <li><span>[fix]</span> Remote de git corregido: apuntaba a <span class="code">BoxesMedia360-Logo-Animation</span> (nombre previo al renombrado). GitHub redirigía, por eso pasó inadvertido</li>
+        <li><span>[doc]</span> Corregido el proxy fantasma: <span class="code">/api/proxy</span> ya no existe en <span class="code">server.js</span>; se retiró de la memoria y de las reglas de oro</li>
+        <li><span>[audit]</span> Auditoría completa del proyecto: 10 hallazgos registrados en la pestaña STATUS y en ERRORES &amp; FIXES. Prioridad 1: la duración se calcula en 3 sitios con reglas distintas</li>
+      </ul>
+    </div>
+    <div class="changelog">
+      <div class="cl-header"><span class="cl-version old">20 JUN 2026</span><span class="cl-date">render local + fps</span></div>
       <ul class="cl-items">
         <li><span>[fix]</span> Frames defectuosos al combinar videos (congelan/saltan/repiten): el render fuerza <span class="code">isRendering=true</span> → usa el <span class="code">&lt;Video&gt;</span> de <span class="code">@remotion/media</span> (frame-exacto)</li>
         <li><span>[+]</span> Selector de <b>FPS 24/30</b> en el editor (default 24, coincide 1:1 con videos de 24 fps); frame-math vía <span class="code">useVideoConfig().fps</span></li>
