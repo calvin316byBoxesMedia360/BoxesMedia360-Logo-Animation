@@ -315,6 +315,13 @@ const DishScene: React.FC<DishSceneProps> = ({
 
     const isVideo = mediaType === 'video';
 
+    // Texto final del precio: sin símbolo si el platillo lo oculta.
+    // Vacío = el platillo no tiene precio y no se dibuja su tarjeta.
+    const priceText = ((item.showCurrencySymbol !== false)
+        ? (item.price || '')
+        : (item.price || '').replace(/[^\d.,]/g, '')
+    ).trim();
+
     // ── PRESET DE FILTROS ──────────────────────────────────────────────────────
     // off          = look cinematográfico oscuro (cuando Luz FX está apagado)
     // native       = imagen 100% original — solo gradiente mínimo para texto
@@ -653,35 +660,39 @@ const DishScene: React.FC<DishSceneProps> = ({
                         {item.description}
                     </p>
 
-                    <div
-                        style={{
-                            marginTop: 35,
-                            display: 'inline-block',
-                            opacity: priceOpacity,
-                            transform: `scale(${priceScale})`,
-                        }}
-                    >
-                        <div style={{
-                            backgroundColor: priceCardBg,
-                            backdropFilter: 'blur(10px)',
-                            padding: '10px 25px',
-                            borderRadius: '15px',
-                            border: priceCardBorder,
-                        }}>
-                            <span
-                                style={{
-                                    fontFamily: '"Playfair Display", Georgia, serif',
-                                    fontSize: 48 * getTextMultiplier(item.fontSizeMode),
-                                    fontWeight: 900,
-                                    color: accentColor,
-                                    textShadow: priceShadow,
-                                    letterSpacing: '0.02em',
-                                }}
-                            >
-                                {(item.showCurrencySymbol !== false) ? (item.price || '') : (item.price || '').replace(/[^\d.,]/g, '').trim()}
-                            </span>
+                    {/* La tarjeta solo se dibuja si hay precio: si no, quedaba un
+                        recuadro redondeado vacío flotando sobre la imagen. */}
+                    {priceText !== '' && (
+                        <div
+                            style={{
+                                marginTop: 35,
+                                display: 'inline-block',
+                                opacity: priceOpacity,
+                                transform: `scale(${priceScale})`,
+                            }}
+                        >
+                            <div style={{
+                                backgroundColor: priceCardBg,
+                                backdropFilter: 'blur(10px)',
+                                padding: '10px 25px',
+                                borderRadius: '15px',
+                                border: priceCardBorder,
+                            }}>
+                                <span
+                                    style={{
+                                        fontFamily: '"Playfair Display", Georgia, serif',
+                                        fontSize: 48 * getTextMultiplier(item.fontSizeMode),
+                                        fontWeight: 900,
+                                        color: accentColor,
+                                        textShadow: priceShadow,
+                                        letterSpacing: '0.02em',
+                                    }}
+                                >
+                                    {priceText}
+                                </span>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
 
