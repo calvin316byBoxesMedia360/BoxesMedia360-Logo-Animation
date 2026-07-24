@@ -318,6 +318,7 @@ scripts/render-video.js    # autodetección Chrome/Edge + bypass arm64</pre></di
         <li><span>[feat]</span> <span class="code">8c42cdb</span> toggle <b>Línea Acento</b> (VISIBLE/OCULTA) en <span class="code">MenuControls</span>, junto a Filtro Oscuro y Movimiento. Verificado: al apagarlo la barra difuminada desaparece del player y el estado persiste en <span class="code">localStorage</span></li>
         <li><span>[fix]</span> Remote de git corregido: apuntaba a <span class="code">BoxesMedia360-Logo-Animation</span> (nombre previo al renombrado). GitHub redirigía, por eso pasó inadvertido</li>
         <li><span>[doc]</span> Corregido el proxy fantasma: <span class="code">/api/proxy</span> ya no existe en <span class="code">server.js</span>; se retiró de la memoria y de las reglas de oro</li>
+        <li><span>[-]</span> <span class="code">11a00a1</span> eliminado el selector de <b>COLOR</b> del panel de herramientas visuales. <span class="code">accentColor</span> queda fijo en <span class="code">#D4AF37</span>: no cambia el aspecto del video, pero deja de ser editable desde la UI</li>
         <li><span>[audit]</span> Auditoría completa del proyecto: 10 hallazgos registrados en la pestaña STATUS y en ERRORES &amp; FIXES. Prioridad 1: la duración se calcula en 3 sitios con reglas distintas</li>
       </ul>
     </div>
