@@ -176,7 +176,7 @@ footer a:hover{color:var(--gp);}
       <div class="spec-row"><span class="label">Backend :3003 escucha en 0.0.0.0 sin autenticación</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
       <div class="spec-row"><span class="label">Firebase SDK aún se inicializa en el editor (auth sin uso)</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
       <div class="spec-row"><span class="label">out/ 853 MB + public/uploads 157 MB sin rutina de limpieza</span><span class="value">⚠ ABIERTO · MEDIO</span></div>
-      <div class="spec-row"><span class="label">showAccentLine sin toggle en MenuControls</span><span class="value">⚠ ABIERTO · MENOR</span></div>
+      <div class="spec-row"><span class="label">showAccentLine sin toggle en MenuControls</span><span class="value check">✓ RESUELTO (23 JUL)</span></div>
     </div>
   </section>
 </div></div>
@@ -314,7 +314,8 @@ scripts/render-video.js    # autodetección Chrome/Edge + bypass arm64</pre></di
     <div class="changelog recent">
       <div class="cl-header"><span class="cl-version new">ACTUAL</span><span class="cl-date">23 JUL 2026</span><span style="margin-left:auto;font-size:.62rem;color:var(--gp);">← LATEST</span></div>
       <ul class="cl-items">
-        <li><span>[feat]</span> <span class="code">e519d7f</span> prop <span class="code">showAccentLine</span>: la línea de acento de <span class="code">DishScene</span> pasa a ser opcional (default <span class="code">true</span>, sin cambio visual). Falta exponer el toggle en <span class="code">MenuControls</span></li>
+        <li><span>[feat]</span> <span class="code">e519d7f</span> prop <span class="code">showAccentLine</span>: la línea de acento de <span class="code">DishScene</span> pasa a ser opcional (default <span class="code">true</span>, sin cambio visual)</li>
+        <li><span>[feat]</span> <span class="code">8c42cdb</span> toggle <b>Línea Acento</b> (VISIBLE/OCULTA) en <span class="code">MenuControls</span>, junto a Filtro Oscuro y Movimiento. Verificado: al apagarlo la barra difuminada desaparece del player y el estado persiste en <span class="code">localStorage</span></li>
         <li><span>[fix]</span> Remote de git corregido: apuntaba a <span class="code">BoxesMedia360-Logo-Animation</span> (nombre previo al renombrado). GitHub redirigía, por eso pasó inadvertido</li>
         <li><span>[doc]</span> Corregido el proxy fantasma: <span class="code">/api/proxy</span> ya no existe en <span class="code">server.js</span>; se retiró de la memoria y de las reglas de oro</li>
         <li><span>[audit]</span> Auditoría completa del proyecto: 10 hallazgos registrados en la pestaña STATUS y en ERRORES &amp; FIXES. Prioridad 1: la duración se calcula en 3 sitios con reglas distintas</li>

@@ -58,6 +58,7 @@ Revisión de todo el código y la documentación con el sistema corriendo (`:300
 * **Abierto (MEDIO) — Backend expuesto en la red.** `server.js` hace `listen(PORT)` sin host (0.0.0.0), con `cors({origin:true})` y subida de 200 MB sin autenticación. Verificado con `netstat`. Vite sí está limitado a localhost.
 * **Abierto (MEDIO) — Firebase residual en el editor.** `MenuControls.tsx` importa `auth` y monta un `onAuthStateChanged` que nunca dispara (nadie llama a `signInAnonymously`): inicializa y empaqueta el SDK sin cumplir función.
 * **Abierto (MEDIO) — Higiene de disco.** `out/` 853 MB (19 MP4) y `public/uploads/` 157 MB, sin rutina de limpieza. La bandeja vive en `localStorage`: al vaciar `out/` quedan enlaces rotos mostrados como "LISTO".
+* **Resuelto (23 jul) — `showAccentLine` sin control.** La barra difuminada de color en la esquina inferior izquierda (la decoración lateral de `DishScene`) ya tiene toggle **Línea Acento** en `MenuControls`, junto a Filtro Oscuro y Movimiento. Commits `e519d7f` (prop) + `8c42cdb` (UI). Verificado en el editor: al apagarlo el nodo desaparece del player y el estado persiste en `localStorage`.
 * **Abierto (MENOR) — Código muerto de la era nube:** `cloudRunService.ts`, `githubActionsService.ts`, `renderService.ts`, `vertexAI.ts`, `scripts/upload-to-storage-action.js`, `Dockerfile`, `firebase.json`. Más `translateX` sin usar en `PremiumMenu.tsx`.
 
 ### Nota de Migración a Local (jun 2026)

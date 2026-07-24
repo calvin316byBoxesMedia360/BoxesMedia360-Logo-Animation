@@ -123,7 +123,8 @@ Este registro rastrea cada interacción con el sistema para permitir mejora cont
 **Action/Acción**: Revisión completa de código y documentación; commit de `showAccentLine`; corrección del remote de git.
 
 **Details/Detalles**:
-- **Commit `e519d7f`** — `feat(menu): prop showAccentLine`. La línea de acento de `DishScene` pasa a ser opcional; default `true`, sin cambio visual. Pendiente el toggle en `MenuControls`.
+- **Commit `e519d7f`** — `feat(menu): prop showAccentLine`. La línea de acento de `DishScene` pasa a ser opcional; default `true`, sin cambio visual.
+- **Commit `8c42cdb`** — toggle **Línea Acento** (VISIBLE/OCULTA) en `MenuControls`. El usuario identificó la barra difuminada de la esquina inferior izquierda y pidió on/off: resultó ser exactamente la prop recién añadida. Verificado en caliente (nodo fuera del player + persistencia en `localStorage`); `vite build` OK.
 - **Remote corregido** — `.git/config` apuntaba a `BoxesMedia360-Logo-Animation.git`, el nombre anterior al renombrado. GitHub redirige repos renombrados, por eso fetch/push funcionaban y el desfase pasó un mes inadvertido. Verificado con `gh api` y corregido con `git remote set-url`.
 - **Proxy fantasma** — `docs/memoria_proyecto.md` documentaba un middleware `/api/proxy` que ya no existe en `server.js`. Corregido en la memoria y derogada la "Regla de Oro" que lo exigía.
 - **10 hallazgos de deuda técnica** registrados en `informe.html` (STATUS + ERRORES & FIXES) y en `docs/memoria_proyecto.md` sección F.
