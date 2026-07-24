@@ -36,6 +36,7 @@ export interface PremiumMenuProps {
     mediaFit?: 'cover' | 'contain';
     rotation?: 'none' | 'left';
     isRendering?: boolean;
+    showAccentLine?: boolean;
     [key: string]: any;
 }
 
