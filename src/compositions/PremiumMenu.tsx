@@ -36,7 +36,6 @@ export interface PremiumMenuProps {
     mediaFit?: 'cover' | 'contain';
     rotation?: 'none' | 'left';
     isRendering?: boolean;
-    showAccentLine?: boolean;
     [key: string]: any;
 }
 
@@ -136,7 +135,6 @@ interface DishSceneProps {
     mediaFit?: 'cover' | 'contain';
     isRendering?: boolean;
     showTextElements?: boolean;
-    showAccentLine?: boolean;
 }
 
 const DishScene: React.FC<DishSceneProps> = ({
@@ -154,7 +152,6 @@ const DishScene: React.FC<DishSceneProps> = ({
     mediaFit = 'cover',
     isRendering = false,
     showTextElements = true,
-    showAccentLine = true,
 }) => {
     const frame = useCurrentFrame();
     const [imgError, setImgError] = useState(false);
@@ -688,24 +685,6 @@ const DishScene: React.FC<DishSceneProps> = ({
                 </div>
             )}
 
-            {/* Decoración lateral (Línea de Acento) */}
-            {showAccentLine && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        bottom: 60,
-                        left: 80,
-                        width: interpolate(frame, [20, 50], [0, 300], {
-                            extrapolateLeft: 'clamp',
-                            extrapolateRight: 'clamp',
-                        }),
-                        height: 4,
-                        background: `linear-gradient(90deg, ${accentColor}, transparent)`,
-                        opacity: textFadeOut,
-                        boxShadow: `0 0 15px ${accentColor}`
-                    }}
-                />
-            )}
         </AbsoluteFill>
     );
 };
@@ -745,7 +724,6 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
     rotation = 'none',
     isRendering = false,
     showTextElements = true,
-    showAccentLine = true,
 }) => {
     // Asegurar booleano real (parche para CLI de Remotion)
     const isSeamlessLoop = isSeamlessLoopProp === true || (isSeamlessLoopProp as unknown) === 'true';
@@ -858,7 +836,6 @@ export const PremiumMenuDynamic: React.FC<PremiumMenuProps> = ({
                             mediaFit={mediaFit}
                             isRendering={isRendering}
                             showTextElements={showTextElements}
-                            showAccentLine={showAccentLine}
                         />
                     </Sequence>
                 ))}

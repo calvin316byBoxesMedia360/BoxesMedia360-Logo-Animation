@@ -48,7 +48,6 @@ export const Editor: React.FC = () => {
         darkOverlayEnabled: true,
         motionEnabled: true,
         mediaPadding: 0,
-        showAccentLine: true,
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);

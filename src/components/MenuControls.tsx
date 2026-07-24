@@ -23,8 +23,7 @@ import {
     Infinity,
     Eye,
     EyeOff,
-    Sun,
-    Minus
+    Sun
 } from 'lucide-react';
 
 interface MenuControlsProps {
@@ -722,7 +721,7 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                 )}
 
                 {/* 🆕 EXTRA VISUAL EFFECTS SELECTOR */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                     <button
                         onClick={() => setProps((prev) => ({ ...prev, darkOverlayEnabled: prev.darkOverlayEnabled !== false ? false : true }))}
                         className={`p-4 rounded-3xl border transition-all space-y-3 flex flex-col items-start text-left ${
@@ -752,22 +751,6 @@ export const MenuControls: React.FC<MenuControlsProps> = ({ props, setProps }) =
                         </div>
                         <div className="text-[10px] font-black uppercase">
                             {props.motionEnabled !== false ? 'ACTIVADO' : 'ESTÁTICO'}
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={() => setProps((prev) => ({ ...prev, showAccentLine: prev.showAccentLine !== false ? false : true }))}
-                        className={`p-4 rounded-3xl border transition-all space-y-3 flex flex-col items-start text-left ${
-                            props.showAccentLine !== false ? 'bg-amber-500/20 border-amber-500/50 text-amber-500' : 'bg-white/5 border-white/5 text-white/40'
-                        }`}
-                        title="Muestra u oculta la barra difuminada de color en la esquina inferior izquierda"
-                    >
-                        <div className="flex items-center gap-2">
-                            <Minus size={14} />
-                            <span className="text-[9px] font-black uppercase">Línea Acento</span>
-                        </div>
-                        <div className="text-[10px] font-black uppercase">
-                            {props.showAccentLine !== false ? 'VISIBLE' : 'OCULTA'}
                         </div>
                     </button>
                 </div>
